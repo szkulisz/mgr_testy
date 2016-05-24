@@ -17,7 +17,7 @@ Program::Program(int loop, int notification, int period, bool save, QObject *par
     mProfiler.setSave(save);
 
     mProfiler.startProfiling();
-
+    asdad
 
 }
 
