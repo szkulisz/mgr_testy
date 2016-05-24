@@ -14,9 +14,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     program.cpp \
-    profiler.cpp
+    profiler.cpp \
+    posixtimer.cpp
 
 HEADERS += \
     program.h \
-    profiler.h
+    profiler.h \
+    posixtimer.h
 

@@ -1,11 +1,11 @@
 #include "program.h"
-#include <QTimer>
 #include <QCoreApplication>
 #include <time.h>
 #include <QFile>
 #include <iostream>
 #include <iomanip>
 #include "profiler.h"
+#include "posixtimer.h"
 
 Program::Program(int loop, int notification, int period, bool save, QObject *parent)
     : QObject(parent),
@@ -13,11 +13,16 @@ Program::Program(int loop, int notification, int period, bool save, QObject *par
       mNotificationNumber(notification)
 {
 
+//    QTimer *timer = new QTimer(this);
+    PosixTimer timer;
+
+//    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+
     mProfiler.setPeriod(period);
     mProfiler.setSave(save);
 
     mProfiler.startProfiling();
-    asdad
+//    timer->start(period);
 
 }
 
