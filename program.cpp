@@ -13,15 +13,11 @@ Program::Program(int loop, int notification, int period, bool save, QObject *par
       mNotificationNumber(notification)
 {
 
-    QTimer *timer = new QTimer(this);
-    timer->setTimerType(Qt::PreciseTimer);
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-
     mProfiler.setPeriod(period);
     mProfiler.setSave(save);
 
     mProfiler.startProfiling();
-    timer->start(period);
+
 
 }
 
