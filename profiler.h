@@ -18,7 +18,7 @@ public:
     int getDifferenceInSeconds();
     int getDifferenceInMiliseconds();
     int getDifferenceInMicroseconds();
-    long  getDifferenceInNanoseconds();
+    long long getDifferenceInNanoseconds();
     void logToFile();
 
     void setPeriod(int period);
