@@ -75,7 +75,7 @@ void Profiler::logToFile()
         mLogStream->setPadChar('0');
         *mLogStream << mTimeActual.tv_nsec;
         mLogStream->setFieldWidth(0);
-        *mLogStream << ", " << getDifferenceInNanoseconds() << ", " << getDifferenceInMicroseconds() << "\n";
+        *mLogStream << ", " << getDifferenceInNanoseconds() << "\n";
         mLogStream->flush();
     }
 }
