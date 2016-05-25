@@ -29,8 +29,8 @@ void Program::update() {
     static int counter;
 
     mProfiler.updateProfiling();
-    //    std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
-    //    std::cout << mProfiler.getDifferenceInMicroseconds() << std::endl;
+//        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
+//        std::cout << mProfiler.getDifferenceInMicroseconds() << std::endl;
     mProfiler.logToFile();
 
 
