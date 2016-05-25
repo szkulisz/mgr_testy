@@ -60,7 +60,7 @@ int Profiler::getDifferenceInMicroseconds()
     return std::round(getDifferenceInNanoseconds() / 1000.0);
 }
 
-long long Profiler::getDifferenceInNanoseconds()
+long Profiler::getDifferenceInNanoseconds()
 {
     long long periodInNs = mPeriod*1000000;
     return (1000000000*mTimerDifference.tv_sec + mTimerDifference.tv_nsec) - periodInNs;
