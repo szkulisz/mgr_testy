@@ -734,7 +734,7 @@ int main(int argc, char *argv[])
     // -l -> ilość pętli
     QCommandLineOption length("l", QCoreApplication::translate("main","Ilość pętli do wykonania przez program"),
                                QCoreApplication::translate("main", "Ilość pętli"));
-    length.setDefaultValue("100");
+    length.setDefaultValue("10");
     parser.addOption(length);
     // -p -> co ile pętli dawać znak życia
     QCommandLineOption progres("p", QCoreApplication::translate("main","Co ile pętli pokazywać progres"),
