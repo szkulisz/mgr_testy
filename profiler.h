@@ -4,6 +4,8 @@
 #include <time.h>
 #include <QFile>
 
+#include <QString>
+
 class QTextStream;
 
 class Profiler
@@ -23,12 +25,15 @@ public:
 
     void setPeriod(int period);
     void setSave(bool save);
+    void setFileName(const QString &fileName);
+    void insertToFileName(const QString &fileName);
 
 private:
     timespec mTimePrevious, mTimeActual, mTimerDifference;
     int mPeriod;
     QTextStream *mLogStream;
     QFile mLogFile;
+    QString mFileName;
     bool mSave;
 
 

@@ -744,15 +744,21 @@ int main(int argc, char *argv[])
     // -t -> rodzaj timera
     QCommandLineOption whichTimer("t", QCoreApplication::translate("main","Co ile pętli pokazywać progres"),
                                QCoreApplication::translate("main", "Ilość pętli"));
-    progres.setDefaultValue("t");
-    parser.addOption(progres);
+    progres.setDefaultValue("0");
+    parser.addOption(whichTimer);
+    // -T -> rodzaj wątku
+    QCommandLineOption whichThread("T", QCoreApplication::translate("main","Co ile pętli pokazywać progres"),
+                               QCoreApplication::translate("main", "Ilość pętli"));
+    progres.setDefaultValue("0");
+    parser.addOption(whichThread);
     // -s -> czy zapisywać do pliku
     QCommandLineOption save("s", QCoreApplication::translate("main","Logowanie do pliku"));
     parser.addOption(save);
     parser.process(a);
 
     Program program(parser.value(length).toInt(), parser.value((progres)).toInt(),
-                    parser.value(interval).toInt(), parser.isSet(save));
+                    parser.value(interval).toInt(), parser.isSet(save),
+                    parser.value(whichTimer).toInt(), parser.value(whichThread).toInt());
 
     return a.exec();
 }

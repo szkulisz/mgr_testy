@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp \
     program.cpp \
     profiler.cpp \
-    posixtimer.cpp
+    posixtimer.cpp \
+    timingthread.cpp
 
 HEADERS += \
     program.h \
     profiler.h \
-    posixtimer.h
+    posixtimer.h \
+    timingthread.h
 
 QMAKE_LIBS += -lrt

@@ -19,7 +19,7 @@ Profiler::Profiler(int period, bool save) :
     mPeriod(period),
     mSave(save)
 {
-
+    setFileName("logs/" + QDateTime::currentDateTime().toString("dd_MM_yy__hh_mm_ss") + ".txt");
 }
 
 Profiler::~Profiler()
@@ -89,13 +89,24 @@ void Profiler::setSave(bool save)
 {
     mSave = save;
     if (mSave) {
-        mLogFile.setFileName("logs/" + QDateTime::currentDateTime().toString("dd_MM_yy__hh_mm_ss") + ".txt");
-        std::unique_ptr<QFile> test(new QFile("test.txt"));
+        mLogFile.setFileName(mFileName);
         mLogFile.open(QFile::WriteOnly | QFile::Text);
 
-        std::unique_ptr<QTextStream> mLogStream(new QTextStream(&mLogFile));
+        mLogStream = new QTextStream(&mLogFile);
     }
 }
+
+
+void Profiler::setFileName(const QString &fileName)
+{
+    mFileName = fileName;
+}
+
+void Profiler::insertToFileName(const QString &fileName)
+{
+    mFileName.insert(5,fileName);
+}
+
 
 timespec Profiler::countDifference(timespec start, timespec end)
 {
