@@ -3,11 +3,15 @@
 #include <QTimer>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
-
+#include <QDebug>
+#include <QThread>
+#include "super.h"
 //#define _POSIX_SOURCE
 //#define _POSIX_C_SOURCE 199309
 #include <unistd.h>
 #include <stdio.h>
+#include <iostream>
+
 
 long val;
 int errno;
@@ -742,7 +746,7 @@ int main(int argc, char *argv[])
     progres.setDefaultValue("10");
     parser.addOption(progres);
     // -t -> rodzaj timera
-    QCommandLineOption whichTimer("t", QCoreApplication::translate("main","Co ile pętli pokazywać progres"),
+    QCommandLineOption whichTimer("t", QCoreApplication::translate("main","Corodzaj rtimera s"),
                                QCoreApplication::translate("main", "Ilość pętli"));
     progres.setDefaultValue("0");
     parser.addOption(whichTimer);
@@ -756,9 +760,27 @@ int main(int argc, char *argv[])
     parser.addOption(save);
     parser.process(a);
 
-    Program program(parser.value(length).toInt(), parser.value((progres)).toInt(),
-                    parser.value(interval).toInt(), parser.isSet(save),
-                    parser.value(whichTimer).toInt(), parser.value(whichThread).toInt());
+//    std::cout <<"From main: "<<QThread::currentThreadId();
+
+    int whichTh = parser.value(whichThread).toInt();
+    whichTh = 0;
+
+//    if( (whichTh == 0) ||(whichTh == 2)) {
+//        Program program(parser.value(length).toInt(), parser.value((progres)).toInt(),
+//                        parser.value(interval).toInt(), parser.isSet(save),
+//                        parser.value(whichTimer).toInt(), parser.value(whichThread).toInt());
+//    }
+//    if( (whichTh == 1) ||(whichTh == 2)) {
+//        Program program2(parser.value(length).toInt(), parser.value((progres)).toInt(),
+//                        parser.value(interval).toInt(), parser.isSet(save),
+//                        parser.value(whichTimer).toInt(), parser.value(whichThread).toInt());
+    Super super(parser.value(length).toInt(), parser.value((progres)).toInt(),
+                                        parser.value(interval).toInt(), parser.isSet(save));
+//                                        parser.value(whichTimer).toInt(), parser.value(whichThread).toInt());
+//        QThread t;
+//        program.moveToThread(&t);
+//        t.start(QThread::TimeCriticalPriority);
+//    }
 
     return a.exec();
 }

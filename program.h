@@ -15,10 +15,11 @@ public:
 //    explicit Program(QObject *parent = 0);
     explicit Program(int loopNumber = 200, int notification = 20, int period = 100,
                      bool save = false, int whichTimer = 0,
-                     int whichThread = 0, QObject *parent = 0);
+                     QString name = 0, QObject *parent = 0);
     ~Program();
 
 signals:
+    void finito();
 
 public slots:
     void update();
@@ -30,6 +31,8 @@ private:
     PosixTimer *mPosixTimer;
     QTimer *mQTimer;
     TimingThread *mTimingThread = NULL;
+    QString mName;
+    int mCounter = 0;
 };
 
 #endif // PROGRAM_H

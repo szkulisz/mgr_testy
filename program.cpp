@@ -8,23 +8,27 @@
 #include "profiler.h"
 #include "posixtimer.h"
 #include "timingthread.h"
+#include <QDebug>
 
 Program::Program(int loop, int notification, int period, bool save,
-                 int whichTimer, int whichThread, QObject *parent)
+                 int whichTimer, QString name, QObject *parent)
     : QObject(parent),
-      mLoopNumber(20),
-      mNotificationNumber(notification)
+      mLoopNumber(loop),
+      mNotificationNumber(notification),
+      mName(name)
 {
+
+
     mQTimer = new QTimer(this);
     connect(mQTimer, SIGNAL(timeout()), this, SLOT(update()));
     mPosixTimer = new PosixTimer();
     connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(update()));
 
-    whichThread = 2;
 
-    if( (whichThread == 0) ||(whichThread == 2)) {
+
+//
         mProfiler.setPeriod(period);
-        mProfiler.insertToFileName("prog_");
+        mProfiler.insertToFileName(name);
         mProfiler.setSave(save);
         mProfiler.startProfiling();
         if (!whichTimer) {
@@ -32,12 +36,12 @@ Program::Program(int loop, int notification, int period, bool save,
         } else {
             mPosixTimer->start(period);
         }
-    }
-    if( (whichThread == 1) ||(whichThread == 2)) {
-        mTimingThread = new TimingThread(loop, notification, period,
-                                         save, whichTimer, this);
-//        mTimingThread->start(QThread::TimeCriticalPriority);
-    }
+//    }
+//    if( (whichThread == 1) ||(whichThread == 2)) {
+//        mTimingThread = new TimingThread(loop, notification, period,
+//                                         save, whichTimer, this);
+////        mTimingThread->start(QThread::TimeCriticalPriority);
+//    }
 
 
 
@@ -51,27 +55,32 @@ Program::~Program()
 }
 
 void Program::update() {
-    static int counter;
 
     mProfiler.updateProfiling();
-        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
-        std::cout << mProfiler.getDifferenceInMicroseconds() << " p" << std::endl;
+//        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
+        std::cout << mProfiler.getDifferenceInMicroseconds() << mName.toStdString() << std::endl;
     mProfiler.logToFile();
 
+//    std::cout <<"From program update: "<<QThread::currentThreadId();
 
+    ++mCounter;
 
-    if (counter%mNotificationNumber == 0)
+    if (mCounter%mNotificationNumber == 0){
 //        std::cout << '\r' << counter << std::flush;
-    if (counter >= mLoopNumber) {
-        std::cout << std::endl;
-        if (mTimingThread) {
-            mTimingThread->quit();
-            mTimingThread->wait();
-        }
-//            while( !mTimingThread->isFinished());
-        QCoreApplication::quit();
     }
-    ++counter;
+    if (mCounter >= mLoopNumber) {
+        std::cout << std::endl;
+        mQTimer->stop();
+        mPosixTimer->stop();
+        emit finito();
+
+//        if (mTimingThread && mTimingThread->isRunning()) {
+//            mTimingThread->quit();
+//            mTimingThread->wait();
+//        }
+//        QCoreApplication::quit();
+    }
+
 
 
 }

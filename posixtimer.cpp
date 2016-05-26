@@ -49,6 +49,14 @@ void PosixTimer::start(int period) {
 
 }
 
+void PosixTimer::stop()
+{
+    mTimerSpec.it_value.tv_sec = 0;
+    mTimerSpec.it_value.tv_nsec = 0;
+    mTimerSpec.it_interval.tv_sec = 0;
+    mTimerSpec.it_interval.tv_nsec = 0;
+}
+
 void PosixTimer::timeoutHandler(int sigNumb, siginfo_t *si, void *uc) {
     // get the pointer out of the siginfo structure and asign it to a new pointer variable
     PosixTimer *ptrTimerClass =

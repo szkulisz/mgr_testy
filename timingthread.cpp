@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QTimer>
 #include "posixtimer.h"
+#include <QDebug>
 
 TimingThread::TimingThread(int loop, int notification, int period, bool save, int whichTimer, QObject *parent)
     : QThread(parent),
@@ -13,6 +14,7 @@ TimingThread::TimingThread(int loop, int notification, int period, bool save, in
       mWhichTimer(whichTimer)
 {
 
+//    qDebug()<<"From work thread: "<<currentThreadId();
     mQTimer = new QTimer(this);
     connect(mQTimer, SIGNAL(timeout()), this, SLOT(update()));
     mPosixTimer = new PosixTimer();
@@ -41,6 +43,7 @@ TimingThread::~TimingThread()
 
 void TimingThread::run()
 {
+
     this->exec();
 }
 
@@ -49,7 +52,7 @@ void TimingThread::run()
 void TimingThread::update()
 {
     static int counter;
-
+//    qDebug()<<"From update: "<<currentThreadId();
     mProfiler.updateProfiling();
         std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
         std::cout << mProfiler.getDifferenceInMicroseconds() << " t " << std::endl;
