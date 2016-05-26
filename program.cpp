@@ -1,5 +1,6 @@
 #include "program.h"
 #include <QCoreApplication>
+#include <QTimer>
 #include <time.h>
 #include <QFile>
 #include <iostream>
@@ -7,23 +8,30 @@
 #include "profiler.h"
 #include "posixtimer.h"
 
-Program::Program(int loop, int notification, int period, bool save, QObject *parent)
+Program::Program(int loop, int notification, int period, bool save, int whichTimer, QObject *parent)
     : QObject(parent),
       mLoopNumber(loop),
-      mNotificationNumber(save)
+      mNotificationNumber(notification)
 {
 
-//    QTimer *timer = new QTimer(this);
-    PosixTimer *timer = new PosixTimer();
 
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+    if (!whichTimer) {
+        QTimer *timer = new QTimer(this);
+        connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+        mProfiler.setPeriod(period);
+        mProfiler.setSave(save);
 
+        mProfiler.startProfiling();
+        timer->start(period);
+    } else {
+        PosixTimer *timer = new PosixTimer();
+        connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+        mProfiler.setPeriod(period);
+        mProfiler.setSave(save);
 
-    mProfiler.setPeriod(period);
-    mProfiler.setSave(save);
-
-    mProfiler.startProfiling();
-    timer->start(period);
+        mProfiler.startProfiling();
+        timer->start(period);
+    }
 
 }
 

@@ -10,7 +10,7 @@ class Program : public QObject
 public:
 //    explicit Program(QObject *parent = 0);
     explicit Program(int loopNumber = 200, int notification = 20, int period = 100,
-                     bool save = false, QObject *parent = 0);
+                     bool save = false, int whichTimer = 0, QObject *parent = 0);
 
 signals:
 

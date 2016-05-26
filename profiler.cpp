@@ -93,7 +93,7 @@ void Profiler::setSave(bool save)
         std::unique_ptr<QFile> test(new QFile("test.txt"));
         mLogFile.open(QFile::WriteOnly | QFile::Text);
 
-        mLogStream = new QTextStream(&mLogFile);
+        std::unique_ptr<QTextStream> mLogStream(new QTextStream(&mLogFile));
     }
 }
 

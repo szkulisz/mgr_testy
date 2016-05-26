@@ -741,6 +741,11 @@ int main(int argc, char *argv[])
                                QCoreApplication::translate("main", "Ilość pętli"));
     progres.setDefaultValue("10");
     parser.addOption(progres);
+    // -t -> rodzaj timera
+    QCommandLineOption whichTimer("t", QCoreApplication::translate("main","Co ile pętli pokazywać progres"),
+                               QCoreApplication::translate("main", "Ilość pętli"));
+    progres.setDefaultValue("t");
+    parser.addOption(progres);
     // -s -> czy zapisywać do pliku
     QCommandLineOption save("s", QCoreApplication::translate("main","Logowanie do pliku"));
     parser.addOption(save);

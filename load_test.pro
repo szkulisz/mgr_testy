@@ -1,9 +1,9 @@
 QT += core
 QT -= gui
 
-TARGET = load_test_posix
-    target.files = load_test_posix
-    target.path = /home/szymon/load_tests_posix
+TARGET = load_test
+    target.files = load_test
+    target.path = /home/szymon/load_tests
 INSTALLS+=target
 
 CONFIG += console
