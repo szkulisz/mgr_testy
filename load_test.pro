@@ -1,9 +1,9 @@
 QT += core
 QT -= gui
 
-TARGET = load_test
-    target.files = load_test
-    target.path = /home/szymon/load_tests
+TARGET = load_test_posix
+    target.files = load_test_posix
+    target.path = /home/szymon/load_tests_posix
 INSTALLS+=target
 
 CONFIG += console
@@ -22,3 +22,4 @@ HEADERS += \
     profiler.h \
     posixtimer.h
 
+QMAKE_LIBS += -lrt

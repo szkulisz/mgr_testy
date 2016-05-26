@@ -14,15 +14,15 @@ Program::Program(int loop, int notification, int period, bool save, QObject *par
 {
 
 //    QTimer *timer = new QTimer(this);
-    PosixTimer timer;
+    PosixTimer *timer = new PosixTimer();
 
-//    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
 
     mProfiler.setPeriod(period);
     mProfiler.setSave(save);
 
     mProfiler.startProfiling();
-//    timer->start(period);
+    timer->start(period);
 
 }
 
@@ -30,8 +30,8 @@ void Program::update() {
     static int counter;
 
     mProfiler.updateProfiling();
-    //    std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
-    //    std::cout << mProfiler.getDifferenceInMicroseconds() << std::endl;
+//        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
+//        std::cout << mProfiler.getDifferenceInMicroseconds() << std::endl;
     mProfiler.logToFile();
 
 
