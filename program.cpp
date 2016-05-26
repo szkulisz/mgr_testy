@@ -1,21 +1,23 @@
 #include "program.h"
-#include <QTimer>
 #include <QCoreApplication>
 #include <time.h>
 #include <QFile>
 #include <iostream>
 #include <iomanip>
 #include "profiler.h"
+#include "posixtimer.h"
 
 Program::Program(int loop, int notification, int period, bool save, QObject *parent)
     : QObject(parent),
       mLoopNumber(loop),
-      mNotificationNumber(notification)
+      mNotificationNumber(save)
 {
 
-    QTimer *timer = new QTimer(this);
-    timer->setTimerType(Qt::PreciseTimer);
+//    QTimer *timer = new QTimer(this);
+    PosixTimer *timer = new PosixTimer();
+
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+
 
     mProfiler.setPeriod(period);
     mProfiler.setSave(save);
