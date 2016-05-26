@@ -38,9 +38,9 @@ PosixTimer::PosixTimer(QObject *parent) : QObject(parent)
 void PosixTimer::start(int period) {
 //    long long freq_nanosecs = period * 1000000;
     mTimerSpec.it_value.tv_sec = period / 1000;
-    mTimerSpec.it_value.tv_nsec = period * 1000000;
+    mTimerSpec.it_value.tv_nsec = (period * 1000000) % 1000000000;
     mTimerSpec.it_interval.tv_sec = period / 1000;
-    mTimerSpec.it_interval.tv_nsec = period * 1000000;
+    mTimerSpec.it_interval.tv_nsec = (period * 1000000) % 1000000000;
 
     // Set the timer and therefore it starts...
     if (timer_settime(this->mTimerID, 0, &this->mTimerSpec, NULL) == -1) {

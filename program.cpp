@@ -10,13 +10,14 @@
 Program::Program(int loop, int notification, int period, bool save, QObject *parent)
     : QObject(parent),
       mLoopNumber(loop),
-      mNotificationNumber(notification)
+      mNotificationNumber(save)
 {
 
 //    QTimer *timer = new QTimer(this);
     PosixTimer *timer = new PosixTimer();
 
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+
 
     mProfiler.setPeriod(period);
     mProfiler.setSave(save);
