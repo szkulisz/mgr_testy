@@ -21,12 +21,13 @@ QMutex Program::mMutex;
     exit(-1);           \
   }
 
-Program::Program(int loop, int notification, int period, bool save,
+Program::Program(int loop, bool notification, int period, bool save,
                  int whichTimer, bool highPrio, QString name, QObject *parent)
     : QObject(parent),
       mLoopNumber(loop),
-      mNotificationNumber(notification),
+      mNotificate(notification),
       mName(name),
+      mPeriod(period),
       mHighPrio(highPrio)
 {
 
@@ -41,9 +42,9 @@ Program::Program(int loop, int notification, int period, bool save,
     mProfiler.startProfiling();
 
     if (!whichTimer) {
-        mQTimer->start(period);
+        mQTimer->start(mPeriod);
     } else {
-        mPosixTimer->start(period);
+        mPosixTimer->start(mPeriod);
     }
 
 }
@@ -66,9 +67,9 @@ void Program::update() {
 
     ++mCounter;
 
-    if ((mCounter%(1000) == 0) && (mNotificationNumber == 1)){
-//        std::system("clear");
-        std::cout << mCounter << ' ' << mName.toStdString() << std::endl;
+    if (mNotificate &&
+            (mPeriod>=1000) ? true : (mCounter%(1000/mPeriod) == 0)){
+        std::cout << '\r' << mCounter << ' ' << mName.toStdString() << std::flush ;
     }
     if (mCounter >= mLoopNumber) {
         std::cout << "Koniec wątku " <<  mName.toStdString() << std::endl;
@@ -76,7 +77,7 @@ void Program::update() {
         struct sched_param param;
         sts = sched_getparam(0, &param);
         CHECK(sts,"sched_getparam");
-        std::cout << mName.toStdString() << " priority " << param.sched_priority << std::endl;
+        std::cout << "Koniec wątku " << mName.toStdString() << " o priorytecie " << param.sched_priority << std::endl;
 
         mQTimer->stop();
         mPosixTimer->stop();

@@ -14,8 +14,8 @@ class Program : public QObject
     Q_OBJECT
 public:
 //    explicit Program(QObject *parent = 0);
-    explicit Program(int loopNumber = 200, int notification = 20, int period = 100,
-                     bool save = false, int whichTimer = 0, bool highPrio = 0,
+    explicit Program(int loopNumber = 200, bool notification = false, int period = 100,
+                     bool save = false, int whichTimer = 0, bool highPrio = false,
                      QString name = 0, QObject *parent = 0);
     ~Program();
 
@@ -29,12 +29,13 @@ public slots:
 private:
     Profiler mProfiler;
     int mLoopNumber;
-    int mNotificationNumber;
+    bool mNotificate;
     PosixTimer *mPosixTimer;
     QTimer *mQTimer;
 //    TimingThread *mTimingThread = NULL;
     QString mName;
     int mCounter = 0;
+    int mPeriod;
     bool mHighPrio;
     static QMutex mMutex;
 

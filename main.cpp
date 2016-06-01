@@ -774,8 +774,7 @@ int main(int argc, char *argv[])
 //        Program program2(parser.value(length).toInt(), parser.value((progres)).toInt(),
 //                        parser.value(interval).toInt(), parser.isSet(save),
 //                        parser.value(whichTimer).toInt(), parser.value(whichThread).toInt());
-    Super super(parser.value(length).toInt(), parser.value((progres)).toInt(),
-                                        parser.value(interval).toInt(), parser.isSet(save));
+    Super super(parser.value(length).toInt(), parser.value(interval).toInt(), parser.isSet(save));
 //                                        parser.value(whichTimer).toInt(), parser.value(whichThread).toInt());
 //        QThread t;
 //        program.moveToThread(&t);

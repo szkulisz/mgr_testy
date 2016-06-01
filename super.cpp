@@ -9,13 +9,12 @@
     exit(-1);           \
   }
 
-Super::Super(int loop, int notification, int period, bool save, QObject *parent)
+Super::Super(int loop, int period, bool save, QObject *parent)
     : QObject(parent)
 {
 //    save = 1;
 //    loop = 250;
 //    period = 1;
-//    notification = 1;
     int sts;
     struct sched_param param;
     sts = sched_getparam(0, &param);
@@ -24,16 +23,14 @@ Super::Super(int loop, int notification, int period, bool save, QObject *parent)
     sts = sched_setscheduler(0, SCHED_FIFO, &param);
     CHECK(sts,"sched_setscheduler");
 
-    p1 = new Program(loop,1,period,save,0,0,"qt_norm_",0);
-    p2 = new Program(loop,2,period,save,1,0,"pos_norm_",0);
-    p3 = new Program(loop,3,period,save,0,1,"qt_hi_",0);
-    p4 = new Program(loop,4,period,save,1,1,"pos_hi_",0);
+    p1 = new Program(loop,true, period,save,0,false,"qt_norm_");
+    p2 = new Program(loop,false,period,save,1,false,"pos_norm_");
+    p3 = new Program(loop,false,period,save,0,true ,"qt_hi_");
+    p4 = new Program(loop,false,period,save,1,true ,"pos_hi_");
     connect(p1,SIGNAL(finito()),this,SLOT(finish()));
     connect(p2,SIGNAL(finito()),this,SLOT(finish()));
     connect(p3,SIGNAL(finito()),this,SLOT(finish()));
     connect(p4,SIGNAL(finito()),this,SLOT(finish()));
-
-
     p1->moveToThread(&t1);
     p2->moveToThread(&t2);
     p3->moveToThread(&t3);
@@ -49,11 +46,7 @@ Super::Super(int loop, int notification, int period, bool save, QObject *parent)
     t1.start();
     t2.start();
     t3.start();
-//    t3.setPriority(QThread::LowPriority);
     t4.start();
-//    t4.setPriority(QThread::HighestPriority);
-//    t3.start(QThread::LowPriority);
-//    t4.start(QThread::TimeCriticalPriority);
 }
 
 void Super::finish()

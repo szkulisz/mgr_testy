@@ -8,7 +8,7 @@ class Super : public QObject
 {
     Q_OBJECT
 public:
-    explicit Super(int loopNumber = 200, int notification = 20, int period = 100,
+    explicit Super(int loopNumber = 200, int period = 100,
                      bool save = false, QObject *parent = 0);
 
 signals:
