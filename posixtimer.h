@@ -7,12 +7,13 @@
 #include <stdio.h>
 #include <signal.h>
 #include <time.h>
+#include <QMutex>
 
 class PosixTimer : public QObject
 {
     Q_OBJECT
 public:
-    explicit PosixTimer(QObject *parent = 0);
+    explicit PosixTimer(int test = 0, QObject *parent = 0);
     void start(int period = 1000);
     void stop();
 
@@ -28,6 +29,8 @@ private:
     sigset_t mSigBlockSet;
     struct sigevent mSignalEvent;
     struct sigaction mSignalAction;
+    int mTest;
+    static QMutex mMutex;
 
     /**
     * The signal handler function with extended signature

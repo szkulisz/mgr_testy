@@ -20,13 +20,14 @@ public:
     int getDifferenceInSeconds();
     int getDifferenceInMiliseconds();
     int getDifferenceInMicroseconds();
-    long long getDifferenceInNanoseconds();
+    qlonglong getDifferenceInNanoseconds();
     void logToFile();
 
     void setPeriod(int period);
     void setSave(bool save);
     void setFileName(const QString &fileName);
     void insertToFileName(const QString &fileName);
+    void write(QString);
 
 private:
     timespec mTimePrevious, mTimeActual, mTimerDifference;

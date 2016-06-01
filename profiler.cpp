@@ -8,6 +8,7 @@
 
 #include <QString>
 //#include <QtDebug>
+#include <QByteArray>
 
 Profiler::Profiler()
     : Profiler(1000, false)
@@ -60,9 +61,9 @@ int Profiler::getDifferenceInMicroseconds()
     return std::round(getDifferenceInNanoseconds() / 1000.0);
 }
 
-long long Profiler::getDifferenceInNanoseconds()
+qlonglong Profiler::getDifferenceInNanoseconds()
 {
-    long long periodInNs = mPeriod*1000000;
+    qlonglong periodInNs = mPeriod*1000000;
     return (1000000000*mTimerDifference.tv_sec + mTimerDifference.tv_nsec) - periodInNs;
 }
 
@@ -70,13 +71,16 @@ void Profiler::logToFile()
 {
     if (mSave) {
 
-        *mLogStream << mTimeActual.tv_sec << '.';
-        mLogStream->setFieldWidth(9);
-        mLogStream->setPadChar('0');
-        *mLogStream << mTimeActual.tv_nsec;
-        mLogStream->setFieldWidth(0);
-        *mLogStream << ", " << getDifferenceInNanoseconds() << "\n";
-        mLogStream->flush();
+//        *mLogStream << mTimeActual.tv_sec << '.';
+//        mLogFile.write(QByteArray::number(getDifferenceInNanoseconds()));
+//        mLogFile.write("\n");
+//        mLogStream->setFieldWidth(9);
+//        mLogStream->setPadChar('0');
+//        *mLogStream << mTimeActual.tv_nsec;
+//        mLogStream->setFieldWidth(0);
+//        *mLogStream << ", " << getDifferenceInNanoseconds() << "\n";
+        *mLogStream << getDifferenceInNanoseconds() << "\n";
+//        mLogStream->flush();
     }
 }
 
@@ -105,6 +109,13 @@ void Profiler::setFileName(const QString &fileName)
 void Profiler::insertToFileName(const QString &fileName)
 {
     mFileName.insert(5,fileName);
+}
+
+void Profiler::write(QString string)
+{
+    if (mSave) {
+        *mLogStream << mTimeActual.tv_sec << '.' << mTimeActual.tv_nsec << ' ' << string << "\n";
+    }
 }
 
 

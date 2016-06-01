@@ -9,6 +9,10 @@
 #include "posixtimer.h"
 #include "timingthread.h"
 #include <QDebug>
+#include <QMutex>
+#include <QMutexLocker>
+
+QMutex Program::mMutex;
 
 Program::Program(int loop, int notification, int period, bool save,
                  int whichTimer, QString name, QObject *parent)
@@ -21,7 +25,7 @@ Program::Program(int loop, int notification, int period, bool save,
 
     mQTimer = new QTimer(this);
     connect(mQTimer, SIGNAL(timeout()), this, SLOT(update()));
-    mPosixTimer = new PosixTimer();
+    mPosixTimer = new PosixTimer(notification);
     connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(update()));
 
 
@@ -56,20 +60,23 @@ Program::~Program()
 
 void Program::update() {
 
+    mProfiler.write(QString("początek"));
     mProfiler.updateProfiling();
 //        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
-        std::cout << mProfiler.getDifferenceInMicroseconds() << mName.toStdString() << std::endl;
+//        std::cout << mProfiler.getDifferenceInMicroseconds() << mName.toStdString() << std::endl;
+    mProfiler.write(QString("update"));
     mProfiler.logToFile();
+    mProfiler.write(QString("zalogowano"));
 
-//    std::cout <<"From program update: "<<QThread::currentThreadId();
 
     ++mCounter;
 
-    if (mCounter%mNotificationNumber == 0){
-//        std::cout << '\r' << counter << std::flush;
+    if ((mCounter%(1000) == 0) && (mNotificationNumber == 1)){
+//        std::system("clear");
+        std::cout << mCounter << ' ' << mName.toStdString() << std::endl;
     }
     if (mCounter >= mLoopNumber) {
-        std::cout << std::endl;
+//        std::cout << "Koniec wątku " <<  mName.toStdString() << std::endl;
         mQTimer->stop();
         mPosixTimer->stop();
         emit finito();
@@ -80,8 +87,6 @@ void Program::update() {
 //        }
 //        QCoreApplication::quit();
     }
-
-
-
+    mProfiler.write(QString("koniec"));
 }
 

@@ -7,6 +7,7 @@
 class PosixTimer;
 class QTimer;
 class TimingThread;
+class QMutex;
 
 class Program : public QObject
 {
@@ -33,6 +34,7 @@ private:
     TimingThread *mTimingThread = NULL;
     QString mName;
     int mCounter = 0;
+    static QMutex mMutex;
 };
 
 #endif // PROGRAM_H

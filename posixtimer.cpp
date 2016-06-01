@@ -1,7 +1,9 @@
 #include "posixtimer.h"
+#include <QMutexLocker>
 
+QMutex PosixTimer::mMutex;
 
-PosixTimer::PosixTimer(QObject *parent) : QObject(parent)
+PosixTimer::PosixTimer(int test, QObject *parent) : QObject(parent),mTest(test)
 {
     // Clear the sa_mask
     sigemptyset(&this->mSignalAction.sa_mask);
@@ -55,13 +57,23 @@ void PosixTimer::stop()
     mTimerSpec.it_value.tv_nsec = 0;
     mTimerSpec.it_interval.tv_sec = 0;
     mTimerSpec.it_interval.tv_nsec = 0;
+
+    // Set the timer and therefore it stops...
+    if (timer_settime(this->mTimerID, 0, &this->mTimerSpec, NULL) == -1) {
+        perror("Could not stop timer:");
+    }
 }
 
 void PosixTimer::timeoutHandler(int sigNumb, siginfo_t *si, void *uc) {
+//    mMutex.lock();
+    QMutexLocker ml(&mMutex);
     // get the pointer out of the siginfo structure and asign it to a new pointer variable
     PosixTimer *ptrTimerClass =
     reinterpret_cast<PosixTimer *> (si->si_value.sival_ptr);
+//    mMutex.unlock();
+
     // call the member function
 //    ptrTimerClass->memberAlarmFunction();
     emit ptrTimerClass->timeout();
+
 }
