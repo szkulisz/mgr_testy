@@ -10,6 +10,7 @@ class Super : public QObject
 public:
     explicit Super(int loopNumber = 200, int period = 100,
                      bool save = false, QObject *parent = 0);
+    ~Super();
 
 signals:
 

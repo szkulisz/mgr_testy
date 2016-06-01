@@ -27,10 +27,10 @@ Super::Super(int loop, int period, bool save, QObject *parent)
     p2 = new Program(loop,false,period,save,1,false,"pos_norm_");
     p3 = new Program(loop,false,period,save,0,true ,"qt_hi_");
     p4 = new Program(loop,false,period,save,1,true ,"pos_hi_");
-    connect(p1,SIGNAL(finito()),this,SLOT(finish()));
-    connect(p2,SIGNAL(finito()),this,SLOT(finish()));
-    connect(p3,SIGNAL(finito()),this,SLOT(finish()));
-    connect(p4,SIGNAL(finito()),this,SLOT(finish()));
+    connect(p1,&Program::done,this,&Super::finish);
+    connect(p2,&Program::done,this,&Super::finish);
+    connect(p3,&Program::done,this,&Super::finish);
+    connect(p4,&Program::done,this,&Super::finish);
     p1->moveToThread(&t1);
     p2->moveToThread(&t2);
     p3->moveToThread(&t3);
@@ -39,14 +39,26 @@ Super::Super(int loop, int period, bool save, QObject *parent)
     t2.setObjectName("pos_norm");
     t3.setObjectName("QT_hi");
     t4.setObjectName("pos_hi");
-    connect(&t1,SIGNAL(started()),p1,SLOT(atThreadStart()));
-    connect(&t2,SIGNAL(started()),p2,SLOT(atThreadStart()));
-    connect(&t3,SIGNAL(started()),p3,SLOT(atThreadStart()));
-    connect(&t4,SIGNAL(started()),p4,SLOT(atThreadStart()));
+    connect(&t1,&QThread::started,p1,&Program::atThreadStart);
+    connect(&t2,&QThread::started,p2,&Program::atThreadStart);
+    connect(&t3,&QThread::started,p3,&Program::atThreadStart);
+    connect(&t4,&QThread::started,p4,&Program::atThreadStart);
+    connect(&t1,&QThread::finished,p1,&QObject::deleteLater);
+    connect(&t2,&QThread::finished,p2,&QObject::deleteLater);
+    connect(&t3,&QThread::finished,p3,&QObject::deleteLater);
+    connect(&t4,&QThread::finished,p4,&QObject::deleteLater);
     t1.start();
     t2.start();
     t3.start();
     t4.start();
+}
+
+Super::~Super()
+{
+    delete p1;
+    delete p2;
+    delete p3;
+    delete p4;
 }
 
 void Super::finish()

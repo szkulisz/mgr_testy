@@ -20,11 +20,10 @@ Profiler::Profiler(int period, bool save) :
 Profiler::~Profiler()
 {
     if (mSave) {
+        delete mLogStream;
         if (mLogFile.isOpen()) {
             mLogFile.close();
         }
-
-        delete mLogStream;
     }
 }
 
@@ -64,15 +63,13 @@ qlonglong Profiler::getDifferenceInNanoseconds()
 void Profiler::logToFile()
 {
     if (mSave) {
-
         *mLogStream << mTimeActual.tv_sec << '.';
 //        mLogFile.write("\n");
         mLogStream->setFieldWidth(9);
         mLogStream->setPadChar('0');
         *mLogStream << mTimeActual.tv_nsec;
         mLogStream->setFieldWidth(0);
-        *mLogStream << ", " << getDifferenceInNanoseconds() << "\n";
-//        *mLogStream << getDifferenceInNanoseconds() << "\n";
+        *mLogStream << getDifferenceInNanoseconds() << "\n";
 //        mLogStream->flush();
     }
 }

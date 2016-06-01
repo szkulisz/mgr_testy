@@ -21,11 +21,11 @@ QMutex Program::mMutex;
     exit(-1);           \
   }
 
-Program::Program(int loop, bool notification, int period, bool save,
+Program::Program(int loop, bool notificate, int period, bool save,
                  int whichTimer, bool highPrio, QString name, QObject *parent)
     : QObject(parent),
       mLoopNumber(loop),
-      mNotificate(notification),
+      mNotificate(notificate),
       mName(name),
       mPeriod(period),
       mHighPrio(highPrio)
@@ -33,11 +33,11 @@ Program::Program(int loop, bool notification, int period, bool save,
 
     mQTimer = new QTimer(this);
     connect(mQTimer, SIGNAL(timeout()), this, SLOT(update()));
-    mPosixTimer = new PosixTimer(notification);
+    mPosixTimer = new PosixTimer(notificate);
     connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(update()));
 
-    mProfiler.setPeriod(period);
-    mProfiler.insertToFileName(name);
+    mProfiler.setPeriod(mPeriod);
+    mProfiler.insertToFileName(mName);
     mProfiler.setSave(save);
     mProfiler.startProfiling();
 
@@ -68,11 +68,10 @@ void Program::update() {
     ++mCounter;
 
     if (mNotificate &&
-            (mPeriod>=1000) ? true : (mCounter%(1000/mPeriod) == 0)){
-        std::cout << '\r' << mCounter << ' ' << mName.toStdString() << std::flush ;
+            ((mPeriod>=1000) ? true : (mCounter%(1000/mPeriod) == 0)) ){
+        std::cout << mCounter << ' ' << mName.toStdString() << std::endl;
     }
     if (mCounter >= mLoopNumber) {
-        std::cout << "Koniec wątku " <<  mName.toStdString() << std::endl;
         int sts;
         struct sched_param param;
         sts = sched_getparam(0, &param);
@@ -81,7 +80,7 @@ void Program::update() {
 
         mQTimer->stop();
         mPosixTimer->stop();
-        emit finito();
+        emit done();
     }
 //    mProfiler.write(QString("koniec"));
 }

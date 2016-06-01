@@ -14,13 +14,13 @@ class Program : public QObject
     Q_OBJECT
 public:
 //    explicit Program(QObject *parent = 0);
-    explicit Program(int loopNumber = 200, bool notification = false, int period = 100,
+    explicit Program(int loopNumber = 200, bool notificate = false, int period = 100,
                      bool save = false, int whichTimer = 0, bool highPrio = false,
                      QString name = 0, QObject *parent = 0);
     ~Program();
 
 signals:
-    void finito();
+    void done();
 
 public slots:
     void update();
