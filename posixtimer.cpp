@@ -64,16 +64,15 @@ void PosixTimer::stop()
     }
 }
 
-void PosixTimer::timeoutHandler(int sigNumb, siginfo_t *si, void *uc) {
-//    mMutex.lock();
+void PosixTimer::timeoutHandler(int, siginfo_t *si, void *) {
+    mMutex.lock();
     QMutexLocker ml(&mMutex);
     // get the pointer out of the siginfo structure and asign it to a new pointer variable
     PosixTimer *ptrTimerClass =
     reinterpret_cast<PosixTimer *> (si->si_value.sival_ptr);
-//    mMutex.unlock();
+    mMutex.unlock();
 
     // call the member function
-//    ptrTimerClass->memberAlarmFunction();
     emit ptrTimerClass->timeout();
 
 }

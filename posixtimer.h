@@ -35,7 +35,7 @@ private:
     /**
     * The signal handler function with extended signature
     */
-    static void timeoutHandler(int sigNumb, siginfo_t *si, void *uc);
+    static void timeoutHandler(int, siginfo_t *si, void *);
 
 };
 

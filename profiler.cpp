@@ -3,12 +3,6 @@
 #include <QDateTime>
 #include <QTextStream>
 #include <QFile>
-#include <memory>
-#include <iomanip>
-
-#include <QString>
-//#include <QtDebug>
-#include <QByteArray>
 
 Profiler::Profiler()
     : Profiler(1000, false)
@@ -71,15 +65,14 @@ void Profiler::logToFile()
 {
     if (mSave) {
 
-//        *mLogStream << mTimeActual.tv_sec << '.';
-//        mLogFile.write(QByteArray::number(getDifferenceInNanoseconds()));
+        *mLogStream << mTimeActual.tv_sec << '.';
 //        mLogFile.write("\n");
-//        mLogStream->setFieldWidth(9);
-//        mLogStream->setPadChar('0');
-//        *mLogStream << mTimeActual.tv_nsec;
-//        mLogStream->setFieldWidth(0);
-//        *mLogStream << ", " << getDifferenceInNanoseconds() << "\n";
-        *mLogStream << getDifferenceInNanoseconds() << "\n";
+        mLogStream->setFieldWidth(9);
+        mLogStream->setPadChar('0');
+        *mLogStream << mTimeActual.tv_nsec;
+        mLogStream->setFieldWidth(0);
+        *mLogStream << ", " << getDifferenceInNanoseconds() << "\n";
+//        *mLogStream << getDifferenceInNanoseconds() << "\n";
 //        mLogStream->flush();
     }
 }

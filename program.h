@@ -6,7 +6,7 @@
 
 class PosixTimer;
 class QTimer;
-class TimingThread;
+//class TimingThread;
 class QMutex;
 
 class Program : public QObject
@@ -15,7 +15,7 @@ class Program : public QObject
 public:
 //    explicit Program(QObject *parent = 0);
     explicit Program(int loopNumber = 200, int notification = 20, int period = 100,
-                     bool save = false, int whichTimer = 0,
+                     bool save = false, int whichTimer = 0, bool highPrio = 0,
                      QString name = 0, QObject *parent = 0);
     ~Program();
 
@@ -24,6 +24,7 @@ signals:
 
 public slots:
     void update();
+    void atThreadStart();
 
 private:
     Profiler mProfiler;
@@ -31,10 +32,12 @@ private:
     int mNotificationNumber;
     PosixTimer *mPosixTimer;
     QTimer *mQTimer;
-    TimingThread *mTimingThread = NULL;
+//    TimingThread *mTimingThread = NULL;
     QString mName;
     int mCounter = 0;
+    bool mHighPrio;
     static QMutex mMutex;
+
 };
 
 #endif // PROGRAM_H
