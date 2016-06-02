@@ -1,103 +1,78 @@
 #include "program.h"
 #include <QCoreApplication>
-#include <QTimer>
-#include <time.h>
-#include <QFile>
-#include <iostream>
-#include <iomanip>
-#include "profiler.h"
-#include "posixtimer.h"
-#include <QDebug>
-#include <QMutex>
-#include <QMutexLocker>
-#include <QThread>
 #include <pthread.h>
-
-QMutex Program::mMutex;
-
+#include "worker.h"
 #define CHECK(sts,msg)  \
   if (sts == -1) {      \
     perror(msg);        \
     exit(-1);           \
   }
 
-Program::Program(int loop, bool notificate, int period, bool save,
-                 int whichTimer, bool highPrio, QString name, QObject *parent)
-    : QObject(parent),
-      mLoopNumber(loop),
-      mNotificate(notificate),
-      mName(name),
-      mPeriod(period),
-      mHighPrio(highPrio)
+Program::Program(int loop, int period, bool save, bool load, QObject *parent)
+    : QObject(parent)
 {
+//    save = 1;
+//    loop = 250;
+//    period = 1;
+    int sts;
+    struct sched_param param;
+    sts = sched_getparam(0, &param);
+    CHECK(sts,"sched_getparam");
+    param.sched_priority = (sched_get_priority_max(SCHED_FIFO) - sched_get_priority_min(SCHED_FIFO)) / 2;
+    sts = sched_setscheduler(0, SCHED_FIFO, &param);
+    CHECK(sts,"sched_setscheduler");
 
-    mQTimer = new QTimer(this);
-    connect(mQTimer, SIGNAL(timeout()), this, SLOT(update()));
-    mPosixTimer = new PosixTimer(notificate);
-    connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(update()));
-
-    mProfiler.setPeriod(mPeriod);
-    mProfiler.insertToFileName(mName);
-    mProfiler.setSave(save);
-    mProfiler.startProfiling();
-
-    if (!whichTimer) {
-        mQTimer->start(mPeriod);
-    } else {
-        mPosixTimer->start(mPeriod);
-    }
-
+    p1 = new Worker(loop,true, period,save,0,false,load,"qt_norm_");
+    p2 = new Worker(loop,false,period,save,1,false,load,"pos_norm_");
+    p3 = new Worker(loop,false,period,save,0,true ,load,"qt_hi_");
+    p4 = new Worker(loop,false,period,save,1,true ,load,"pos_hi_");
+    connect(p1,&Worker::done,this,&Program::finish);
+    connect(p2,&Worker::done,this,&Program::finish);
+    connect(p3,&Worker::done,this,&Program::finish);
+    connect(p4,&Worker::done,this,&Program::finish);
+    p1->moveToThread(&t1);
+    p2->moveToThread(&t2);
+    p3->moveToThread(&t3);
+    p4->moveToThread(&t4);
+    t1.setObjectName("QT_norm");
+    t2.setObjectName("pos_norm");
+    t3.setObjectName("QT_hi");
+    t4.setObjectName("pos_hi");
+    connect(&t1,&QThread::started,p1,&Worker::atThreadStart);
+    connect(&t2,&QThread::started,p2,&Worker::atThreadStart);
+    connect(&t3,&QThread::started,p3,&Worker::atThreadStart);
+    connect(&t4,&QThread::started,p4,&Worker::atThreadStart);
+    connect(&t1,&QThread::finished,p1,&QObject::deleteLater);
+    connect(&t2,&QThread::finished,p2,&QObject::deleteLater);
+    connect(&t3,&QThread::finished,p3,&QObject::deleteLater);
+    connect(&t4,&QThread::finished,p4,&QObject::deleteLater);
+    t1.start();
+    t2.start();
+    t3.start();
+    t4.start();
 }
 
 Program::~Program()
 {
-    delete mPosixTimer;
-    delete mQTimer;
+
 }
 
-void Program::update() {
-//    mProfiler.write(QString("początek"));
-    mProfiler.updateProfiling();
-//        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
-//        std::cout << mProfiler.getDifferenceInMicroseconds() << mName.toStdString() << std::endl;
-//    mProfiler.write(QString("update"));
-    mProfiler.logToFile();
-//    mProfiler.write(QString("zalogowano"));
-
-
-    ++mCounter;
-
-    if (mNotificate &&
-            ((mPeriod>=1000) ? true : (mCounter%(1000/mPeriod) == 0)) ){
-        std::cout << mCounter << ' ' << mName.toStdString() << std::endl;
-    }
-    if (mCounter >= mLoopNumber) {
-        int sts;
-        struct sched_param param;
-        sts = sched_getparam(0, &param);
-        CHECK(sts,"sched_getparam");
-        std::cout << "Koniec wątku " << mName.toStdString() << " o priorytecie " << param.sched_priority << std::endl;
-
-        mQTimer->stop();
-        mPosixTimer->stop();
-        emit done();
-    }
-//    mProfiler.write(QString("koniec"));
-}
-
-void Program::atThreadStart()
+void Program::finish()
 {
-    int high_priority, sts, policy;
-    struct sched_param param;
-    sts = pthread_getschedparam(pthread_self(), &policy, &param);
-    CHECK(sts,"pthread_getschedparam");
-    high_priority = sched_get_priority_max(SCHED_FIFO);
-    if (mHighPrio){
-        param.sched_priority = high_priority;
-    } else {
-        param.sched_priority = high_priority/2;
+    static int counter = 4;
+
+    --counter;
+    if (!counter) {
+        t1.quit();
+        t1.wait();
+        t2.quit();
+        t2.wait();
+        t3.quit();
+        t3.wait();
+        t4.quit();
+        t4.wait();
+        QCoreApplication::quit();
     }
-    sts = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
-    CHECK(sts,"pthread_setschedparam");
+
 }
 

@@ -26,17 +26,14 @@ public:
     void setPeriod(int period);
     void setSave(bool save);
     void setFileName(const QString &fileName);
-    void insertToFileName(const QString &fileName);
-    void write(QString);
 
 private:
-    timespec mTimePrevious, mTimeActual, mTimerDifference;
+    bool mSave;
     int mPeriod;
-    QTextStream *mLogStream;
+    timespec mTimePrevious, mTimeActual, mTimerDifference;
     QFile mLogFile;
     QString mFileName;
-    bool mSave;
-
+    QTextStream *mLogStream;
 
     timespec countDifference(timespec start, timespec stop);
 
