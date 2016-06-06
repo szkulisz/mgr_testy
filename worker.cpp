@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include <QString>
 #include <QTimer>
+#include <QThread>
 #include <iostream>
 #include <pthread.h>
 #include "posixtimer.h"
@@ -12,6 +13,8 @@
     perror(msg);        \
     exit(-1);           \
   }
+
+QMutex Worker::mMutex;
 
 Worker::Worker(int loop, bool notificate, int period, bool save,
                  int whichTimer, bool highPrio, bool load, QString name, QObject *parent)
@@ -26,10 +29,12 @@ Worker::Worker(int loop, bool notificate, int period, bool save,
 
     mQTimer = new QTimer();
     connect(mQTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
-    connect(mQTimer, SIGNAL(timeout()), this, SIGNAL(timeout()));
+//    connect(mQTimer, SIGNAL(timeout()), this, SLOT(onTimeoutLog()));
     mPosixTimer = new PosixTimer();
     connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
-    connect(mPosixTimer, SIGNAL(timeout()), this, SIGNAL(timeout()));
+//    connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(onTimeoutLog()));
+    mQTimerLog = new QTimer();
+    connect(mQTimerLog, SIGNAL(timeout()), this, SLOT(onTimeoutLog()));
 
     mProfiler.setPeriod(mPeriod);
     QString temp;
@@ -47,6 +52,7 @@ Worker::Worker(int loop, bool notificate, int period, bool save,
     } else {
         mPosixTimer->start(mPeriod);
     }
+    mQTimerLog->start(mPeriod*100);
 
 }
 
@@ -65,11 +71,12 @@ void Worker::onTimeout() {
     mProfiler.updateProfiling();
 //        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
 //        std::cout << mProfiler.getDifferenceInMicroseconds() << mName.toStdString() << std::endl;
-    mProfiler.logToFile();
-
+//    mProfiler.logToFile();
+    mMutex.lock();
+    mDifferences.push_front(mProfiler.getDifferenceInNanoseconds());
+    mMutex.unlock();
 
     ++mCounter;
-
     if (mNotificate &&
             ((mPeriod>=1000) ? true : (mCounter%(1000/mPeriod) == 0)) ){
         std::cout << mCounter << ' ' << mName.toStdString() << std::endl;
@@ -79,12 +86,23 @@ void Worker::onTimeout() {
         struct sched_param param;
         sts = sched_getparam(0, &param);
         CHECK(sts,"sched_getparam");
-        std::cout << "Koniec wątku " << mName.toStdString() << " o priorytecie " << param.sched_priority << std::endl;
+        std::cout << "Koniec watku " << mName.toStdString() << " o priorytecie " << param.sched_priority << std::endl;
 
         mQTimer->stop();
         mPosixTimer->stop();
+        onTimeoutLog();
         emit done();
     }
+}
+
+void Worker::onTimeoutLog()
+{
+    mMutex.lock();
+    std::deque<long long> copy = mDifferences;
+    mDifferences.clear();
+    mMutex.unlock();
+//    emit timeout(mProfiler.getDifferenceInNanoseconds());
+    emit timeout(copy);
 }
 
 void Worker::atThreadStart()

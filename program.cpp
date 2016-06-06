@@ -1,6 +1,7 @@
 #include "program.h"
 #include <QCoreApplication>
 #include <QTextStream>
+#include <QThread>
 #include <pthread.h>
 #include "worker.h"
 #include <unistd.h>
@@ -31,23 +32,23 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
         }
     }
 
-    QString temp;
+    QString name;
     if (load) {
-        temp = "_with_";
+        name = "_with_";
     } else {
-        temp = "_without_";
+        name = "_without_";
     }
     if (highPrio) {
-        temp += "hi_";
+        name += "hi_";
     } else {
-        temp += "norm_";
+        name += "norm_";
     }
     switch (timer) {
     case 0:
-        temp += "qt";
+        name += "qt";
         break;
     case 1:
-        temp += "pos";
+        name += "pos";
     default:
         break;
     }
@@ -61,15 +62,15 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
 //    sts = sched_setscheduler(0, SCHED_FIFO, &param);
 //    CHECK(sts,"sched_setscheduler");
 
-    p1 = new Worker(loop,true,period,0,0,highPrio,load,"qt_norm_");
+    p1 = new Worker(loop,true,period,0,timer,highPrio,load,name);
+    connect(p1,&Worker::done,this,&Program::finish);
     p1->moveToThread(&t1);
-    t1.setObjectName("QT_norm");
+    t1.setObjectName(name);
     connect(&t1,&QThread::started,p1,&Worker::atThreadStart);
     connect(&t1,&QThread::finished,p1,&QObject::deleteLater);
-    connect(p1,&Worker::done,this,&Program::finish);
 
     if (mSave) {
-        mFileName = "logs/" + QString::number(period) + temp + ".txt";
+        mFileName = "logs/" + QString::number(period) + name + ".txt";
         mLogFile.setFileName(mFileName);
         mLogFile.open(QFile::WriteOnly | QFile::Text);
         mLogStream = new QTextStream(&mLogFile);
@@ -95,10 +96,13 @@ void Program::finish()
     QCoreApplication::quit();
 }
 
-void Program::onTimeoutLog()
+void Program::onTimeoutLog(std::deque<long long> difference)
 {
     if (mSave) {
-        *mLogStream << p1->getDifferenceInNanoseconds() << "\n";
+        for (auto &diff :difference){
+            *mLogStream << diff << "\n";
+        }
+//        *mLogStream << difference << "\n";
     }
 }
 

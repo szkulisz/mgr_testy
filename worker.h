@@ -20,10 +20,11 @@ public:
 
 signals:
     void done();
-    void timeout();
+    void timeout(long long);
 
 public slots:
     void onTimeout();
+    void onTimeoutLog();
     void atThreadStart();
 
 private:

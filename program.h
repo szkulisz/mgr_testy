@@ -16,7 +16,7 @@ signals:
 
 public slots:
     void finish();
-    void onTimeoutLog();
+    void onTimeoutLog(long long);
 
 private:
     Worker *p1, *p2, *p3, *p4;
@@ -25,7 +25,7 @@ private:
     bool mLoad, mSave;
     QFile mLogFile;
     QString mFileName;
-    QTextStream *mLogStream;
+    QTextStream *mLogStream = nullptr;
 };
 
 #endif // SUPER_H
