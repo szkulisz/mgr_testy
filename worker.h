@@ -6,9 +6,6 @@
 
 class PosixTimer;
 class QTimer;
-//class GPIO;
-#include "GPIO/GPIO.h"
-using namespace exploringBB;
 class Worker : public QObject
 {
     Q_OBJECT
@@ -18,12 +15,15 @@ public:
                      bool save = false, int whichTimer = 0, bool highPrio = false,
                      bool load = false, QString name = 0, QObject *parent = 0);
     ~Worker();
+    long long getDifferenceInNanoseconds();
+
 
 signals:
     void done();
+    void timeout();
 
 public slots:
-    void update();
+    void onTimeout();
     void atThreadStart();
 
 private:
@@ -36,7 +36,6 @@ private:
     Profiler mProfiler;
     PosixTimer *mPosixTimer;
     QTimer *mQTimer;
-    GPIO *mPin;
 
 
 

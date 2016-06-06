@@ -16,15 +16,13 @@ SOURCES += main.cpp \
     profiler.cpp \
     posixtimer.cpp \
     worker.cpp \
-    program.cpp \
-    GPIO/GPIO.cpp
+    program.cpp
 
 HEADERS += \
     profiler.h \
     posixtimer.h \
     worker.h \
-    program.h \
-    GPIO/GPIO.h
+    program.h
 
 QMAKE_LIBS += -lrt
 LIBS += -pthread

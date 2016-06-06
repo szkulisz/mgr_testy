@@ -5,10 +5,6 @@
 #include <iostream>
 #include <pthread.h>
 #include "posixtimer.h"
-#include "GPIO/GPIO.h"
-
-using namespace exploringBB;
-
 
 
 #define CHECK(sts,msg)  \
@@ -26,14 +22,14 @@ Worker::Worker(int loop, bool notificate, int period, bool save,
       mPeriod(period),
       mName(name)
 {
-    mPin = new GPIO(14);
-    mPin->setDirection(OUTPUT);
 
 
     mQTimer = new QTimer();
-    connect(mQTimer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(mQTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+    connect(mQTimer, SIGNAL(timeout()), this, SIGNAL(timeout()));
     mPosixTimer = new PosixTimer();
-    connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+    connect(mPosixTimer, SIGNAL(timeout()), this, SIGNAL(timeout()));
 
     mProfiler.setPeriod(mPeriod);
     QString temp;
@@ -56,20 +52,20 @@ Worker::Worker(int loop, bool notificate, int period, bool save,
 
 Worker::~Worker()
 {
-    delete mPin;
     delete mPosixTimer;
     delete mQTimer;
 }
 
-void Worker::update() {
-    mPin->setValue(HIGH);
-//    mProfiler.write(QString("początek"));
+long long Worker::getDifferenceInNanoseconds()
+{
+    return mProfiler.getDifferenceInNanoseconds();
+}
+
+void Worker::onTimeout() {
     mProfiler.updateProfiling();
 //        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
 //        std::cout << mProfiler.getDifferenceInMicroseconds() << mName.toStdString() << std::endl;
-//    mProfiler.write(QString("update"));
     mProfiler.logToFile();
-//    mProfiler.write(QString("zalogowano"));
 
 
     ++mCounter;
@@ -89,9 +85,6 @@ void Worker::update() {
         mPosixTimer->stop();
         emit done();
     }
-//    mProfiler.write(QString("koniec"));
-//    usleep(2);
-    mPin->setValue(LOW);
 }
 
 void Worker::atThreadStart()

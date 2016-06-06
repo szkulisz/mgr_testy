@@ -3,6 +3,7 @@
 #include <QCommandLineParser>
 #include <QCommandLineOption>
 #include "program.h"
+#include <iostream>
 
 int main(int argc, char *argv[])
 {
@@ -24,17 +25,25 @@ int main(int argc, char *argv[])
                               QCoreApplication::translate("main","loops"));
     length.setDefaultValue("10");
     parser.addOption(length);
+    // -t -> timer type
+    QCommandLineOption timer("t", QCoreApplication::translate("main","timer type: 0=QT, 1=POSIX"),
+                              QCoreApplication::translate("main","timer"));
+    timer.setDefaultValue("0");
+    parser.addOption(timer);
     // -s -> if save to file
     QCommandLineOption save("s", QCoreApplication::translate("main","save to file option"));
     parser.addOption(save);
     // -l -> if load is present
     QCommandLineOption load("l", QCoreApplication::translate("main","indicate if load is present in system"));
     parser.addOption(load);
+    // -p -> timer in high priority thread
+    QCommandLineOption priority("p", QCoreApplication::translate("main","timer in high priority thread"));
+    parser.addOption(priority);
     parser.process(a);
 
 
-    Program program(parser.value(length).toInt(), parser.value(interval).toInt(),
-                parser.isSet(save), parser.isSet(load));
+    Program program(parser.value(length).toInt(), parser.value(interval).toInt(), parser.value(timer).toInt(),
+                parser.isSet(priority), parser.isSet(save), parser.isSet(load));
 
     return a.exec();
 }
