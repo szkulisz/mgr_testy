@@ -5,6 +5,11 @@
 #include <iostream>
 #include <pthread.h>
 #include "posixtimer.h"
+#include "GPIO/GPIO.h"
+
+using namespace exploringBB;
+
+
 
 #define CHECK(sts,msg)  \
   if (sts == -1) {      \
@@ -21,6 +26,9 @@ Worker::Worker(int loop, bool notificate, int period, bool save,
       mPeriod(period),
       mName(name)
 {
+    mPin = new GPIO(14);
+    mPin->setDirection(OUTPUT);
+
 
     mQTimer = new QTimer();
     connect(mQTimer, SIGNAL(timeout()), this, SLOT(update()));
@@ -48,9 +56,13 @@ Worker::Worker(int loop, bool notificate, int period, bool save,
 
 Worker::~Worker()
 {
+    delete mPin;
+    delete mPosixTimer;
+    delete mQTimer;
 }
 
 void Worker::update() {
+    mPin->setValue(HIGH);
 //    mProfiler.write(QString("początek"));
     mProfiler.updateProfiling();
 //        std::cout << std::setiosflags(std::ios::right) << std::resetiosflags(std::ios::left) << std::setw(10);
@@ -78,6 +90,8 @@ void Worker::update() {
         emit done();
     }
 //    mProfiler.write(QString("koniec"));
+//    usleep(2);
+    mPin->setValue(LOW);
 }
 
 void Worker::atThreadStart()
@@ -95,4 +109,3 @@ void Worker::atThreadStart()
     sts = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
     CHECK(sts,"pthread_setschedparam");
 }
-

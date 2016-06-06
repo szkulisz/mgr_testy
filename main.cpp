@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     parser.process(a);
 
 
-    Program super(parser.value(length).toInt(), parser.value(interval).toInt(),
+    Program program(parser.value(length).toInt(), parser.value(interval).toInt(),
                 parser.isSet(save), parser.isSet(load));
 
     return a.exec();

@@ -6,7 +6,9 @@
 
 class PosixTimer;
 class QTimer;
-
+//class GPIO;
+#include "GPIO/GPIO.h"
+using namespace exploringBB;
 class Worker : public QObject
 {
     Q_OBJECT
@@ -34,6 +36,7 @@ private:
     Profiler mProfiler;
     PosixTimer *mPosixTimer;
     QTimer *mQTimer;
+    GPIO *mPin;
 
 
 
