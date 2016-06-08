@@ -150,12 +150,13 @@ void Worker::atThreadStart()
     struct sched_param param;
     sts = pthread_getschedparam(pthread_self(), &policy, &param);
     CHECK(sts,"pthread_getschedparam");
-    high_priority = sched_get_priority_max(SCHED_RR);
+    high_priority = sched_get_priority_max(SCHED_FIFO);
     if (mHighPrio){
         param.sched_priority = high_priority;
     } else {
         param.sched_priority = high_priority/2;
     }
-    sts = pthread_setschedparam(pthread_self(), SCHED_RR, &param);
+    sts = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
     CHECK(sts,"pthread_setschedparam");
+    std::cout << param.sched_priority<< " elo z worker" << QThread::currentThreadId() << "prio " << param.sched_priority << std::endl;
 }

@@ -7,16 +7,16 @@
 
 void Logger::run()
 {
-//        int sts;
-//        struct sched_param param;
-//        sts = sched_getparam(0, &param);
-////        CHECK(sts,"sched_getparam");
-//        param.sched_priority = sched_get_priority_min(SCHED_FIFO);
-//        sts = sched_setscheduler(0, SCHED_FIFO, &param);
-////        CHECK(sts,"sched_setscheduler");
+        int sts;
+        struct sched_param param;
+        sts = sched_getparam(0, &param);
+//        CHECK(sts,"sched_getparam");
+        param.sched_priority = sched_get_priority_min(SCHED_OTHER);
+        sts = sched_setscheduler(0, SCHED_OTHER, &param);
+//        CHECK(sts,"sched_setscheduler");
 
-//    std::cout << param.sched_priority<< " elo z " << QThread::currentThreadId() << std::endl;
-    std::cout << "elo z " << mLogFile.isOpen() << std::endl;
+    std::cout << param.sched_priority<< " elo z log" << QThread::currentThreadId() << "prio " << param.sched_priority << std::endl;
+//    std::cout << "elo z " << mLogFile.isOpen() << std::endl;
 
     while(1){
         if (gBufferFull.testAndSetAcquire(1,0)) {
@@ -34,6 +34,7 @@ void Logger::run()
                 gDiffBuffer1.clear();
 //                mLogStream->flush();
             }
+            std::cout << "zapisalem" << std::endl;
         }
         QThread::msleep(50);
         if (gContinueLogging.load() == 0)

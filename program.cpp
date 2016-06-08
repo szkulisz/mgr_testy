@@ -26,9 +26,11 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
     if (mLoad) {
         mChildPid = fork();
         if (mChildPid == 0) {
-            char *argv[] = {(char*)"/usr/bin/stress", (char*)"--cpu", (char*)"1",
-                           (char*)"--io", (char*)"1", (char*)"--vm", (char*)"1",
-                           (char*)"--vm-bytes", (char*)"128M", 0};
+            char *argv[] = {(char*)"/usr/bin/stress",
+                            (char*)"--cpu", (char*)"1",(char*)"--io", (char*)"1",
+                            (char*)"--vm", (char*)"1",(char*)"--vm-bytes", (char*)"128M",
+                            (char*)"--hdd", (char*)"1",(char*)"--hdd-bytes", (char*)"128M",
+                            0};
             execv("/usr/bin/stress",argv);
         }
     }
@@ -59,9 +61,10 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
     struct sched_param param;
     sts = sched_getparam(0, &param);
     CHECK(sts,"sched_getparam");
-    param.sched_priority = (sched_get_priority_max(SCHED_FIFO) - sched_get_priority_min(SCHED_FIFO)) / 2;
+    param.sched_priority = 99;//(sched_get_priority_max(SCHED_FIFO));
     sts = sched_setscheduler(0, SCHED_FIFO, &param);
     CHECK(sts,"sched_setscheduler");
+    std::cout << param.sched_priority<< " elo z program" << QThread::currentThreadId() << "prio " << param.sched_priority << std::endl;
 
     p1 = new Worker(loop,true,period,false,timer,highPrio,load,name);
     connect(p1,&Worker::done,this,&Program::finish);
@@ -93,6 +96,10 @@ Program::~Program()
 //    mLogFile.write(mBuffer.buffer());
     mLogFile.close();
     delete mLogStream;
+    if (mLoad) {
+        if (system("pkill -f stress") ==0 )
+            perror("pkill");
+    }
 }
 
 void Program::finish()
@@ -101,10 +108,7 @@ void Program::finish()
     t1.wait();
     mLogger.quit();
     mLogger.wait();
-    if (mLoad) {
-        if (system("pkill -f stress") ==0 )
-            perror("pkill");
-    }
+
     QCoreApplication::quit();
 }
 
