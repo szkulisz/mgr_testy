@@ -4,6 +4,10 @@
 #include <QObject>
 #include "profiler.h"
 
+extern long long mBuf[2000];
+extern int mBufIdx;
+extern bool mBufFlagDownReady, mBufFlagUpReady;
+
 class PosixTimer;
 class QTimer;
 class Worker : public QObject
@@ -33,10 +37,17 @@ private:
     int mLoopNumber;
     int mCounter;
     int mPeriod;
+    int mWhereToWrite;
     QString mName;
     Profiler mProfiler;
     PosixTimer *mPosixTimer;
     QTimer *mQTimer;
+    int mOverrunCounter = 0;
+    int mMaxOverrun  = 0;
+    int mTest = 0;
+    int mMaxCounter = 0;
+    long long mMaxNano = 0;
+
 
 
 

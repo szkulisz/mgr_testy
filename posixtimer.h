@@ -23,7 +23,8 @@ signals:
 
 public slots:
 
-private:
+//private:
+public:
     timer_t mTimerID;
     struct itimerspec mTimerSpec;
     sigset_t mSigBlockSet;

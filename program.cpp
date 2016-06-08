@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <iostream>
+#include <sstream>
 
 #define CHECK(sts,msg)  \
   if (sts == -1) {      \
@@ -54,34 +55,43 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
     }
 
 
-//    int sts;
-//    struct sched_param param;
-//    sts = sched_getparam(0, &param);
-//    CHECK(sts,"sched_getparam");
-//    param.sched_priority = (sched_get_priority_max(SCHED_FIFO) - sched_get_priority_min(SCHED_FIFO)) / 2;
-//    sts = sched_setscheduler(0, SCHED_FIFO, &param);
-//    CHECK(sts,"sched_setscheduler");
+    int sts;
+    struct sched_param param;
+    sts = sched_getparam(0, &param);
+    CHECK(sts,"sched_getparam");
+    param.sched_priority = (sched_get_priority_max(SCHED_FIFO) - sched_get_priority_min(SCHED_FIFO)) / 2;
+    sts = sched_setscheduler(0, SCHED_FIFO, &param);
+    CHECK(sts,"sched_setscheduler");
 
-    p1 = new Worker(loop,true,period,0,timer,highPrio,load,name);
+    p1 = new Worker(loop,true,period,false,timer,highPrio,load,name);
     connect(p1,&Worker::done,this,&Program::finish);
     p1->moveToThread(&t1);
     t1.setObjectName(name);
     connect(&t1,&QThread::started,p1,&Worker::atThreadStart);
     connect(&t1,&QThread::finished,p1,&QObject::deleteLater);
 
-    if (mSave) {
-        mFileName = "logs/" + QString::number(period) + name + ".txt";
-        mLogFile.setFileName(mFileName);
-        mLogFile.open(QFile::WriteOnly | QFile::Text);
-        mLogStream = new QTextStream(&mLogFile);
-        connect(p1,&Worker::timeout,this,&Program::onTimeoutLog);
-    }
+//    if (mSave) {
+//        mFileName = "logs/" + QString::number(period) + name + ".txt";
+//        mLogFile.setFileName(mFileName);
+//        mLogFile.open(QFile::WriteOnly | QFile::Text);
+//        mLogStream = new QTextStream(&mLogFile);
+//        mLogStream = new QTextStream(&mArray);
+//        mBuffer.open(QBuffer::ReadWrite);
+//        connect(p1,&Worker::timeout,this,&Program::onTimeoutLog);
+//        connect(&mTimer,SIGNAL(timeout()),this,SLOT(onTimeoutLog2()));
+//        mTimer.start(250);
 
+//    }
+//    connect(&mLogger,&Logger::finished, )
+    mLogger.start();
     t1.start();
 }
 
 Program::~Program()
 {
+//    std::cout << mBuffer.size() << std::endl;
+//    mLogFile.write(mBuffer.buffer());
+    mLogFile.close();
     delete mLogStream;
 }
 
@@ -89,6 +99,8 @@ void Program::finish()
 {
     t1.quit();
     t1.wait();
+    mLogger.quit();
+    mLogger.wait();
     if (mLoad) {
         if (system("pkill -f stress") ==0 )
             perror("pkill");
@@ -96,13 +108,28 @@ void Program::finish()
     QCoreApplication::quit();
 }
 
-void Program::onTimeoutLog(std::deque<long long> difference)
+void Program::onTimeoutLog(long long difference)
 {
     if (mSave) {
-        for (auto &diff :difference){
-            *mLogStream << diff << "\n";
-        }
 //        *mLogStream << difference << "\n";
+//        mStream << difference;
+//        mBuffer.write(mStream.str().c_str());
+
     }
+}
+
+void Program::onTimeoutLog2()
+{
+//    if (mSave) {
+//        if (mBufFlagUpReady) {
+//            for (int i=0;i<1000;++i)
+//                *mLogStream <</* mBuf[i] << */"\n";
+//        }
+//        if (mBufFlagDownReady) {
+//            for (int i=0;i<1000;++i)
+//                *mLogStream << mBuf[i+1000] << "\n";
+//        }
+//    }
+
 }
 

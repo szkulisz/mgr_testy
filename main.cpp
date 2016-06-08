@@ -5,6 +5,7 @@
 #include "program.h"
 #include <iostream>
 
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -18,12 +19,12 @@ int main(int argc, char *argv[])
     // -i -> interval
     QCommandLineOption interval("i", QCoreApplication::translate("main","timer interval"),
                                 QCoreApplication::translate("main","interval=MSEC"));
-    interval.setDefaultValue("100");
+    interval.setDefaultValue("1");
     parser.addOption(interval);
     // -n -> umber of loops
     QCommandLineOption length("n", QCoreApplication::translate("main","number of loops"),
                               QCoreApplication::translate("main","loops"));
-    length.setDefaultValue("10");
+    length.setDefaultValue("10000");
     parser.addOption(length);
     // -t -> timer type
     QCommandLineOption timer("t", QCoreApplication::translate("main","timer type: 0=QT, 1=POSIX"),

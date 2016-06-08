@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QTextStream>
 #include <QFile>
+#include <iostream>
 
 Profiler::Profiler()
     : Profiler(1000, false)
@@ -21,6 +22,8 @@ Profiler::~Profiler()
 {
     if (mSave) {
         delete mLogStream;
+        std::cout << mByteArray.size() << std::endl;
+        mLogFile.write(mByteArray);
         if (mLogFile.isOpen()) {
             mLogFile.close();
         }
@@ -51,7 +54,8 @@ int Profiler::getDifferenceInMiliseconds()
 
 int Profiler::getDifferenceInMicroseconds()
 {
-    return std::round(getDifferenceInNanoseconds() / 1000.0);
+//    return std::round(getDifferenceInNanoseconds() / 1000.0);
+    return getDifferenceInNanoseconds() / 1000;
 }
 
 qlonglong Profiler::getDifferenceInNanoseconds()
@@ -63,13 +67,13 @@ qlonglong Profiler::getDifferenceInNanoseconds()
 void Profiler::logToFile()
 {
     if (mSave) {
-        *mLogStream << mTimeActual.tv_sec << '.';
+//        *mLogStream << mTimeActual.tv_sec << '.';
 //        mLogFile.write("\n");
-        mLogStream->setFieldWidth(9);
-        mLogStream->setPadChar('0');
-        *mLogStream << mTimeActual.tv_nsec;
-        mLogStream->setFieldWidth(0);
-        *mLogStream << ", " << getDifferenceInNanoseconds() << "\n";
+//        mLogStream->setFieldWidth(9);
+//        mLogStream->setPadChar('0');
+//        *mLogStream << mTimeActual.tv_nsec;
+//        mLogStream->setFieldWidth(0);
+        *mLogStream << getDifferenceInNanoseconds() << "\n";
 //        mLogStream->flush();
     }
 }
@@ -86,7 +90,7 @@ void Profiler::setSave(bool save)
         mLogFile.setFileName(mFileName);
         mLogFile.open(QFile::WriteOnly | QFile::Text);
 
-        mLogStream = new QTextStream(&mLogFile);
+        mLogStream = new QTextStream(&mByteArray);
     }
 }
 

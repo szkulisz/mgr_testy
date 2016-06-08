@@ -3,7 +3,13 @@
 
 #include <QObject>
 #include "worker.h"
+#include <QBuffer>
+#include <QByteArray>
 #include <QThread>
+#include <QTimer>
+#include <sstream>
+#include "logger.h"
+
 class Program : public QObject
 {
     Q_OBJECT
@@ -17,6 +23,7 @@ signals:
 public slots:
     void finish();
     void onTimeoutLog(long long);
+    void onTimeoutLog2();
 
 private:
     Worker *p1, *p2, *p3, *p4;
@@ -26,6 +33,11 @@ private:
     QFile mLogFile;
     QString mFileName;
     QTextStream *mLogStream = nullptr;
+    QBuffer mBuffer;
+    QByteArray mArray;
+    std::ostringstream mStream;
+    QTimer mTimer;
+    Logger mLogger;
 };
 
 #endif // SUPER_H

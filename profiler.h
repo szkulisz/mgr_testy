@@ -5,6 +5,7 @@
 #include <QFile>
 
 #include <QString>
+#include <QByteArray>
 
 class QTextStream;
 
@@ -34,6 +35,7 @@ private:
     QFile mLogFile;
     QString mFileName;
     QTextStream *mLogStream;
+    QByteArray mByteArray;
 
     timespec countDifference(timespec start, timespec stop);
 
