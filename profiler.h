@@ -5,15 +5,38 @@
 #include <QFile>
 
 #include <QString>
-#include <QByteArray>
+#include <QObject>
+#include <QThread>
 
 class QTextStream;
 
-class Profiler
+class LoggerHelper : public QObject
 {
+    Q_OBJECT
 public:
-    Profiler();
-    Profiler(int period, bool save);
+    explicit LoggerHelper(QObject *parent = 0);
+    explicit LoggerHelper(QString, QObject *parent = 0);
+    ~LoggerHelper();
+
+public slots:
+    void log(long long difference);
+    void atThreadStart();
+
+
+
+private:
+    QFile mLogFile;
+    QString mFileName;
+    QTextStream *mLogStream = nullptr;
+
+};
+
+class Profiler : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Profiler(QObject *parent = 0);
+    explicit Profiler(int period, bool save, QObject *parent = 0);
     ~Profiler();
 
     void startProfiling();
@@ -21,25 +44,27 @@ public:
     int getDifferenceInSeconds();
     int getDifferenceInMiliseconds();
     int getDifferenceInMicroseconds();
-    qlonglong getDifferenceInNanoseconds();
+    long long getDifferenceInNanoseconds();
     void logToFile();
 
     void setPeriod(int period);
-    void setSave(bool save);
-    void setFileName(const QString &fileName);
+    void startLogging(bool save, const QString &fileName);
+
+signals:
+    void log(long long);
 
 private:
     bool mSave;
     int mPeriod;
     timespec mTimePrevious, mTimeActual, mTimerDifference;
-    QFile mLogFile;
-    QString mFileName;
-    QTextStream *mLogStream;
-    QByteArray mByteArray;
+    QThread mLoggerThread;
+    LoggerHelper *mLogger = nullptr;
 
     timespec countDifference(timespec start, timespec stop);
 
 };
+
+
 
 
 

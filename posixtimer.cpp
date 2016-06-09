@@ -1,7 +1,4 @@
 #include "posixtimer.h"
-#include <QMutexLocker>
-
-QMutex PosixTimer::mMutex;
 
 PosixTimer::PosixTimer(int test, QObject *parent) : QObject(parent),mTest(test)
 {
@@ -23,7 +20,7 @@ PosixTimer::PosixTimer(int test, QObject *parent) : QObject(parent),mTest(test)
     // Now it's possible to give a pointer to the object
     this->mSignalEvent.sigev_value.sival_ptr = (void*) this;
     // Declare this signal as Alarm Signal
-    this->mSignalEvent.sigev_signo = SIGALRM;
+    this->mSignalEvent.sigev_signo = SIGRTMIN;
 
     // Install the Timer
     if (timer_create(CLOCK_MONOTONIC, &this->mSignalEvent, &this->mTimerID)!= 0) {
@@ -32,7 +29,7 @@ PosixTimer::PosixTimer(int test, QObject *parent) : QObject(parent),mTest(test)
     }
 
     // Finally install tic as signal handler
-    if (sigaction(SIGALRM, &this->mSignalAction, NULL)) {
+    if (sigaction(SIGRTMIN, &this->mSignalAction, NULL)) {
         perror("Could not install new signal handler");
     }
 }
@@ -65,12 +62,9 @@ void PosixTimer::stop()
 }
 
 void PosixTimer::timeoutHandler(int, siginfo_t *si, void *) {
-//    mMutex.lock();
-    QMutexLocker ml(&mMutex);
     // get the pointer out of the siginfo structure and asign it to a new pointer variable
     PosixTimer *ptrTimerClass =
     reinterpret_cast<PosixTimer *> (si->si_value.sival_ptr);
-//    mMutex.unlock();
 
     // call the member function
     emit ptrTimerClass->timeout();

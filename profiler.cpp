@@ -2,32 +2,38 @@
 #include <cmath>
 #include <QDateTime>
 #include <QTextStream>
+#include <QThread>
 #include <QFile>
 #include <iostream>
 
-Profiler::Profiler()
-    : Profiler(1000, false)
+#define CHECK(sts,msg)  \
+  if (sts == -1) {      \
+    perror(msg);        \
+    exit(-1);           \
+  }
+
+
+Profiler::Profiler(QObject *parent)
+    : Profiler(1000, false, parent)
 {
 
 }
 
-Profiler::Profiler(int period, bool save) :
-    mSave(save),
-    mPeriod(period)
+Profiler::Profiler(int period, bool save, QObject *parent)
+    : QObject(parent),
+      mSave(save),
+      mPeriod(period)
 {
-    setFileName("logs/" + QDateTime::currentDateTime().toString("dd_MM_yy__hh_mm_ss") + ".txt");
 }
 
 Profiler::~Profiler()
 {
     if (mSave) {
-        delete mLogStream;
-        std::cout << mByteArray.size() << std::endl;
-        mLogFile.write(mByteArray);
-        if (mLogFile.isOpen()) {
-            mLogFile.close();
-        }
+        delete mLogger;
+        mLoggerThread.quit();
+        mLoggerThread.wait();
     }
+
 }
 
 void Profiler::startProfiling()
@@ -58,23 +64,16 @@ int Profiler::getDifferenceInMicroseconds()
     return getDifferenceInNanoseconds() / 1000;
 }
 
-qlonglong Profiler::getDifferenceInNanoseconds()
+long long Profiler::getDifferenceInNanoseconds()
 {
-    qlonglong periodInNs = mPeriod*1000000;
+    long long periodInNs = mPeriod*1000000;
     return (1000000000*mTimerDifference.tv_sec + mTimerDifference.tv_nsec) - periodInNs;
 }
 
 void Profiler::logToFile()
 {
     if (mSave) {
-//        *mLogStream << mTimeActual.tv_sec << '.';
-//        mLogFile.write("\n");
-//        mLogStream->setFieldWidth(9);
-//        mLogStream->setPadChar('0');
-//        *mLogStream << mTimeActual.tv_nsec;
-//        mLogStream->setFieldWidth(0);
-        *mLogStream << getDifferenceInNanoseconds() << "\n";
-//        mLogStream->flush();
+        emit log(getDifferenceInNanoseconds());
     }
 }
 
@@ -83,22 +82,20 @@ void Profiler::setPeriod(int period)
     mPeriod = period;
 }
 
-void Profiler::setSave(bool save)
+void Profiler::startLogging(bool save, const QString &fileName)
 {
     mSave = save;
     if (mSave) {
-        mLogFile.setFileName(mFileName);
-        mLogFile.open(QFile::WriteOnly | QFile::Text);
-
-        mLogStream = new QTextStream(&mByteArray);
+        mLogger = new LoggerHelper(fileName);
+        mLogger->moveToThread(&mLoggerThread);
+        connect(&mLoggerThread,&QThread::started,mLogger,&LoggerHelper::atThreadStart);
+        connect(this,&Profiler::log,mLogger,&LoggerHelper::log);
+        mLoggerThread.setObjectName("LoggerThread");
+        mLoggerThread.start();
     }
 }
 
 
-void Profiler::setFileName(const QString &fileName)
-{
-    mFileName = fileName;
-}
 
 timespec Profiler::countDifference(timespec start, timespec end)
 {
@@ -111,4 +108,45 @@ timespec Profiler::countDifference(timespec start, timespec end)
         temp.tv_nsec = end.tv_nsec-start.tv_nsec;
     }
     return temp;
+}
+
+
+
+LoggerHelper::LoggerHelper(QObject *parent)
+    : QObject(parent)
+{
+
+}
+
+LoggerHelper::LoggerHelper(QString fileName, QObject *parent) :
+    QObject(parent),
+    mFileName(fileName)
+{
+    mLogFile.setFileName(mFileName);
+    mLogFile.open(QFile::WriteOnly | QFile::Text);
+    mLogStream = new QTextStream(&mLogFile);
+}
+
+LoggerHelper::~LoggerHelper()
+{
+    delete mLogStream;
+    if (mLogFile.isOpen())
+        mLogFile.close();
+}
+
+void LoggerHelper::log(long long difference)
+{
+    *mLogStream << difference << "\n";
+}
+
+void LoggerHelper::atThreadStart()
+{
+    int sts;
+    struct sched_param param;
+    sts = sched_getparam(0, &param);
+    CHECK(sts,"sched_getparam");
+    param.sched_priority = sched_get_priority_min(SCHED_OTHER);
+    sts = sched_setscheduler(0, SCHED_OTHER, &param);
+    CHECK(sts,"sched_setscheduler");
+    std::cout << "LoggerThread ma ID: " << QThread::currentThreadId() << " i priorytet: " << param.sched_priority << std::endl;
 }

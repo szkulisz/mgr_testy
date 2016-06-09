@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <signal.h>
 #include <time.h>
-#include <QMutex>
 
 class PosixTimer : public QObject
 {
@@ -23,15 +22,13 @@ signals:
 
 public slots:
 
-//private:
-public:
+private:
     timer_t mTimerID;
     struct itimerspec mTimerSpec;
     sigset_t mSigBlockSet;
     struct sigevent mSignalEvent;
     struct sigaction mSignalAction;
     int mTest;
-    static QMutex mMutex;
 
     /**
     * The signal handler function with extended signature

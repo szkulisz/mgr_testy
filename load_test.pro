@@ -16,17 +16,13 @@ SOURCES += main.cpp \
     profiler.cpp \
     posixtimer.cpp \
     worker.cpp \
-    program.cpp \
-    logger.cpp \
-    globals.cpp
+    program.cpp
 
 HEADERS += \
     profiler.h \
     posixtimer.h \
     worker.h \
-    program.h \
-    logger.h \
-    globals.h
+    program.h
 
 QMAKE_LIBS += -lrt
 LIBS += -pthread

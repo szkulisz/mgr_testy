@@ -40,6 +40,9 @@ int main(int argc, char *argv[])
     // -p -> timer in high priority thread
     QCommandLineOption priority("p", QCoreApplication::translate("main","timer in high priority thread"));
     parser.addOption(priority);
+    // -r -> Linux is RT patched
+    QCommandLineOption kernel("r", QCoreApplication::translate("main","Linux is RT patched"));
+    parser.addOption(kernel);
     parser.process(a);
 
 

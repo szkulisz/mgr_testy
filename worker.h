@@ -4,20 +4,14 @@
 #include <QObject>
 #include "profiler.h"
 
-extern long long mBuf[2000];
-extern int mBufIdx;
-extern bool mBufFlagDownReady, mBufFlagUpReady;
-
 class PosixTimer;
 class QTimer;
 class Worker : public QObject
 {
     Q_OBJECT
 public:
-//    explicit Program(QObject *parent = 0);
     explicit Worker(int loopNumber = 200, bool notificate = false, int period = 100,
-                     bool save = false, int whichTimer = 0, bool highPrio = false,
-                     bool load = false, QString name = 0, QObject *parent = 0);
+                     bool save = false, int whichTimer = 0, bool highPrio = false, QString name = 0, QObject *parent = 0);
     ~Worker();
     long long getDifferenceInNanoseconds();
 
@@ -28,7 +22,6 @@ signals:
 
 public slots:
     void onTimeout();
-    void onTimeoutLog();
     void atThreadStart();
 
 private:
