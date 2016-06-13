@@ -1,6 +1,7 @@
 #include "program.h"
 #include <QCoreApplication>
 #include <QTextStream>
+#include <QThread>
 #include <pthread.h>
 #include <unistd.h>
 #include <signal.h>
@@ -14,11 +15,9 @@
     exit(-1);           \
   }
 
-Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool load, bool rtKernel, QObject *parent)
+Program::Program(int loop, int period, int timer, bool save, bool load, bool rtKernel, QObject *parent)
     : QObject(parent),
       mLoad(load),
-      mSave(save),
-      mHighPrio(highPrio),
       mLoopNumber(loop),
       mPeriod(period)
 {
@@ -29,6 +28,18 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
 //    mHighPrio = 1;
 //    timer = 1;
 
+        if (mLoad) {
+            mChildPid = fork();
+            if (mChildPid == 0) {
+                char *argv[] = {(char*)"/usr/bin/stress",
+                                (char*)"--cpu", (char*)"1",(char*)"--io", (char*)"1",
+                                (char*)"--vm", (char*)"1",(char*)"--vm-bytes", (char*)"128M",
+                                (char*)"--hdd", (char*)"1",(char*)"--hdd-bytes", (char*)"128M",
+                                0};
+                execv("/usr/bin/stress",argv);
+            }
+        }
+
     int sts;
     struct sched_param param;
     sts = sched_getparam(0, &param);
@@ -38,30 +49,28 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
     CHECK(sts,"sched_setscheduler");
     std::cout << "proces ma ID: " << QThread::currentThreadId() << " i priorytet: " << param.sched_priority << std::endl;
 
-    connect(this, &Program::done, this, &Program::finish);
-
-    QString name = "logs/" + QString::number(period);
+    mName =  QString::number(period);
     if (rtKernel) {
-        name += "_rt_";
+        mName += "_rt_";
     } else {
-        name += "_norm_";
+        mName += "_norm_";
     }
     if (load) {
-        name += "with_";
+        mName += "with_";
     } else {
-        name += "without_";
+        mName += "without_";
     }
-    if (highPrio) {
-        name += "hi_";
+    if (mHighPrio) {
+        mName += "hi_";
     } else {
-        name += "low_";
+        mName += "low_";
     }
     switch (timer) {
     case 0:
-        name += "qt";
+        mName += "qt";
         break;
     case 1:
-        name += "pos";
+        mName += "pos";
         break;
     default:
         std::cout << "Incorrect -t value" << std::endl;
@@ -69,22 +78,18 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
         QCoreApplication::quit();
         break;
     }
-    name += ".txt";
 
-    mProfiler.setPeriod(mPeriod);
-    mProfiler.startLogging(loop, save, name);
+    connect(&mQTimer, &QTimer::timeout, this, &Program::onTimeout);
+    connect(&mPosixTimer, &PosixTimer::timeout, this, &Program::onTimeout);
+
+    mProfiler.startLogging(period, loop, save, "logs/" + mName + ".txt");
     mProfiler.startProfiling();
-
-    mQTimer = new QTimer();
-    connect(mQTimer, &QTimer::timeout, this, &Program::onTimeout);
-    mPosixTimer = new PosixTimer();
-    connect(mPosixTimer, &PosixTimer::timeout, this, &Program::onTimeout);
     switch (timer) {
     case 0:
-        mQTimer->start(mPeriod/1000);
+        mQTimer.start(mPeriod/1000);
         break;
     case 1:
-        mPosixTimer->start(mPeriod);
+        mPosixTimer.start(mPeriod);
         break;
     case 2:
         break;
@@ -93,61 +98,48 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
     }
 
 
-//    if (mLoad) {
-//        mChildPid = fork();
-//        if (mChildPid == 0) {
-//            char *argv[] = {(char*)"/usr/bin/stress",
-//                            (char*)"--cpu", (char*)"1",(char*)"--io", (char*)"1", (char*)"-v",
-//                            (char*)"--vm", (char*)"1",(char*)"--vm-bytes", (char*)"128M",
-//                            (char*)"--hdd", (char*)"1",(char*)"--hdd-bytes", (char*)"128M",
-//                            0};
-//            execv("/usr/bin/stress",argv);
-//        }
-//    }
+
 }
 
 Program::~Program()
 {
-//    if (mLoad) {
-//        if (system("pkill -f stress") ==0 )
-//            perror("pkill");
-//    }
-    delete mPosixTimer;
-    delete mQTimer;
+    if (mLoad) {
+        if (system("pkill -f stress") ==0 )
+            perror("pkill");
+    }
 }
 
-void Program::finish()
-{
-    QCoreApplication::quit();
-}
+
 
 void Program::onTimeout()
 {
-    mProfiler.updateProfiling();
-    mProfiler.saveLogFile();
+    mProfiler.updatePeriodProfiling();
 
     ++mCounter;
-    mTest = timer_getoverrun(mPosixTimer->mTimerID);
-    if (mTest != 0 && mCounter!=1) {
-        mOverrunCounter++;
-        if (mTest>mMaxOverrun){
-            mMaxOverrun = mTest;
-            mMaxNano = mProfiler.getDifferenceInNanoseconds();
-            mMaxCounter = mCounter;
-        }
-    }
+//    mTest = timer_getoverrun(mPosixTimer.mTimerID);
+//    if (mTest != 0 && mCounter!=1) {
+//        mOverrunCounter++;
+//        if (mTest>mMaxOverrun){
+//            mMaxOverrun = mTest;
+//            mMaxNano = mProfiler.getDifferenceInNanoseconds();
+//            mMaxCounter = mCounter;
+//        }
+//    }
 
     if ((mPeriod>=1000000) ? true : (mCounter%(1000000/mPeriod) == 0)) {
         std::cout << "\r" << mCounter << ' ' << mName.toStdString() << std::flush;
     }
     if (mCounter >= mLoopNumber) {
-        std::cout << "overrunCounter: " << mOverrunCounter <<std::endl;
+        std::cout << "\noverrunCounter: " << mOverrunCounter <<std::endl;
         std::cout << "maxOverrun: " << mMaxOverrun << std::endl;
         std::cout << "mMaxNano: " << mMaxNano << std::endl;
         std::cout << "maxCounter: " << mMaxCounter << std::endl;
-        mQTimer->stop();
-        mPosixTimer->stop();
-        emit done();
+        mQTimer.stop();
+        mPosixTimer.stop();
+        mProfiler.saveLogFile();
+        QCoreApplication::quit();
     }
+
+    mProfiler.updateHandlerTimeProfiling();
 }
 

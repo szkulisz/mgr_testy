@@ -1,9 +1,6 @@
 #include "profiler.h"
 #include <cmath>
-#include <QDateTime>
 #include <QTextStream>
-#include <QThread>
-#include <QFile>
 #include <iostream>
 
 #define CHECK(sts,msg)  \
@@ -14,24 +11,14 @@
 
 
 Profiler::Profiler(QObject *parent)
-    : Profiler(1000, false, parent)
+    : QObject(parent)
 {
 }
 
-Profiler::Profiler(int loops, int period, bool save, QObject *parent)
-    : QObject(parent),
-      mSave(save),
-      mPeriod(period),
-      mLoops(loops)
-{
-}
+
 
 Profiler::~Profiler()
 {
-    if (mSave) {
-        delete mLogStream;
-        delete mLogTable;
-    }
 
 }
 
@@ -40,11 +27,32 @@ void Profiler::startProfiling()
     clock_gettime(CLOCK_MONOTONIC, &mTimePrevious);
 }
 
-void Profiler::updateProfiling()
+void Profiler::updatePeriodProfiling()
 {
     clock_gettime(CLOCK_MONOTONIC, &mTimeActual);
     mTimerDifference = countDifference( mTimePrevious, mTimeActual );
     mTimePrevious = mTimeActual;
+    if (mSave) {
+        if (mLogPeriodTableIdx <= mLoops) {
+            mLogPeriodTable[mLogPeriodTableIdx++] = getDifferenceInNanoseconds();
+        } else {
+            std::cout << "Przekroczyles rozmiar tablicy..." << std::endl;
+        }
+    }
+}
+
+void Profiler::updateHandlerTimeProfiling()
+{
+    clock_gettime(CLOCK_MONOTONIC, &mTimeActual);
+    mTimerDifference = countDifference( mTimePrevious, mTimeActual );
+    if (mSave) {
+        if (mLogHandlerTableIdx <= mLoops) {
+            timespec temp = countDifference(mTimePrevious, mTimeActual);
+            mLogHandlerTable[mLogHandlerTableIdx++] = 1000000000*temp.tv_sec + temp.tv_nsec;
+        } else {
+            std::cout << "Przekroczyles rozmiar tablicy..." << std::endl;
+        }
+    }
 }
 
 int Profiler::getDifferenceInSeconds()
@@ -59,8 +67,7 @@ int Profiler::getDifferenceInMiliseconds()
 
 int Profiler::getDifferenceInMicroseconds()
 {
-//    return std::round(getDifferenceInNanoseconds() / 1000.0);
-    return getDifferenceInNanoseconds() / 1000;
+    return std::round(getDifferenceInNanoseconds() / 1000.0);
 }
 
 long long Profiler::getDifferenceInNanoseconds()
@@ -72,22 +79,29 @@ long long Profiler::getDifferenceInNanoseconds()
 void Profiler::saveLogFile()
 {
     if (mSave) {
-        mLogFile.setFileName(fileName);
         mLogFile.open(QFile::WriteOnly | QFile::Text);
-        mLogStream = new QTextStream(&mLogFile);
+        QTextStream logStream(&mLogFile);
+        std::cout << "\nzapis do pliku" << std::endl;
+        for(unsigned int i=1; i<mLoops-1; ++i)
+            logStream << mLogPeriodTable[i] << ", " << mLogHandlerTable[i] << "\n";
+        delete mLogPeriodTable;
+        delete mLogHandlerTable;
+        if (mLogFile.isOpen())
+            mLogFile.close();
+        std::cout << "koniec zapisu" << std::endl;
     }
 }
 
-void Profiler::setPeriod(int period)
-{
-    mPeriod = period;
-}
 
-void Profiler::startLogging(int loops, bool save, const QString &fileName)
+void Profiler::startLogging(int period, int loops, bool save, const QString &fileName)
 {
     mSave = save;
     if (mSave) {
-        mLogTable = new long long[loops];
+        mPeriod = period;
+        mLoops = loops;
+        mLogPeriodTable = new long long[loops];
+        mLogHandlerTable = new long long[loops];
+        mLogFile.setFileName(fileName);
     }
 }
 

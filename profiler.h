@@ -3,11 +3,8 @@
 
 #include <time.h>
 #include <QFile>
-#include <QTextStream>
 #include <QString>
 #include <QObject>
-
-class QTextStream;
 
 
 class Profiler : public QObject
@@ -15,19 +12,18 @@ class Profiler : public QObject
     Q_OBJECT
 public:
     explicit Profiler(QObject *parent = 0);
-    explicit Profiler(int loops,int period, bool save, QObject *parent = 0);
     ~Profiler();
 
     void startProfiling();
-    void updateProfiling();
+    void updatePeriodProfiling();
+    void updateHandlerTimeProfiling();
     int getDifferenceInSeconds();
     int getDifferenceInMiliseconds();
     int getDifferenceInMicroseconds();
     long long getDifferenceInNanoseconds();
-    void logToFile();
+    void saveLogFile();
 
-    void setPeriod(int period);
-    void startLogging(int loops, bool save, const QString &fileName);
+    void startLogging(int period, int loops, bool save, const QString &fileName);
 
 
 
@@ -35,12 +31,13 @@ private:
     bool mSave;
     int mPeriod;
     timespec mTimePrevious, mTimeActual, mTimerDifference;
-    int mLoops;
-    long long *mLogTable;
-    unsigned int mLogTableIdx=0;
+    unsigned int mLoops;
+    long long *mLogPeriodTable;
+    unsigned int mLogPeriodTableIdx=0;
+    long long *mLogHandlerTable;
+    unsigned int mLogHandlerTableIdx=0;
     QFile mLogFile;
     QString mFileName;
-    QTextStream *mLogStream = nullptr;
 
     timespec countDifference(timespec start, timespec stop);
 

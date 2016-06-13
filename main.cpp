@@ -1,5 +1,4 @@
 #include <QCoreApplication>
-#include "worker.h"
 #include <QCommandLineParser>
 #include <QCommandLineOption>
 #include "program.h"
@@ -37,9 +36,6 @@ int main(int argc, char *argv[])
     // -l -> if load is present
     QCommandLineOption load("l", QCoreApplication::translate("main","indicate if load is present in system"));
     parser.addOption(load);
-    // -p -> timer in high priority thread
-    QCommandLineOption priority("p", QCoreApplication::translate("main","indicate if timer is in high priority thread"));
-    parser.addOption(priority);
     // -r -> Linux is RT patched
     QCommandLineOption kernel("r", QCoreApplication::translate("main","indicate if Linux is RT patched"));
     parser.addOption(kernel);
@@ -53,7 +49,7 @@ int main(int argc, char *argv[])
 
 
     Program program(parser.value(length).toInt(), parser.value(period).toInt(), parser.value(timer).toInt(),
-                parser.isSet(priority), parser.isSet(save), parser.isSet(load), parser.isSet(kernel));
+                parser.isSet(save), parser.isSet(load), parser.isSet(kernel));
 
     return a.exec();
 }
