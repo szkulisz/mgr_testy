@@ -29,8 +29,7 @@ public:
     void setPeriod(int period);
     void startLogging(int loops, bool save, const QString &fileName);
 
-signals:
-    void log(long long);
+
 
 private:
     bool mSave;
