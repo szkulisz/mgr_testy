@@ -20,29 +20,21 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
       mLoad(load),
       mSave(save)
 {
+//    save = 1;
 //    mSave = 1;
-//    loop = 250;
-//    period = 1;
+//    loop = 1000;
+//    period = 1000;
+//    highPrio = 1;
+//    timer = 0;
+
     int sts;
     struct sched_param param;
     sts = sched_getparam(0, &param);
     CHECK(sts,"sched_getparam");
-    param.sched_priority = 50;//(sched_get_priority_max(SCHED_FIFO));
+    param.sched_priority = 99;//(sched_get_priority_max(SCHED_FIFO));
     sts = sched_setscheduler(0, SCHED_FIFO, &param);
     CHECK(sts,"sched_setscheduler");
     std::cout << "proces ma ID: " << QThread::currentThreadId() << " i priorytet: " << param.sched_priority << std::endl;
-
-    if (mLoad) {
-        mChildPid = fork();
-        if (mChildPid == 0) {
-            char *argv[] = {(char*)"/usr/bin/stress",
-                            (char*)"--cpu", (char*)"1",(char*)"--io", (char*)"1",
-                            (char*)"--vm", (char*)"1",(char*)"--vm-bytes", (char*)"128M",
-                            (char*)"--hdd", (char*)"1",(char*)"--hdd-bytes", (char*)"128M",
-                            0};
-            execv("/usr/bin/stress",argv);
-        }
-    }
 
     QString name = QString::number(period);
     if (rtKernel) {
@@ -77,14 +69,26 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
     connect(&mTimerThread,&QThread::started,mWorker,&Worker::atThreadStart);
     connect(&mTimerThread,&QThread::finished,mWorker,&QObject::deleteLater);
     mTimerThread.start();
+
+//    if (mLoad) {
+//        mChildPid = fork();
+//        if (mChildPid == 0) {
+//            char *argv[] = {(char*)"/usr/bin/stress",
+//                            (char*)"--cpu", (char*)"1",(char*)"--io", (char*)"1", (char*)"-v",
+//                            (char*)"--vm", (char*)"1",(char*)"--vm-bytes", (char*)"128M",
+//                            (char*)"--hdd", (char*)"1",(char*)"--hdd-bytes", (char*)"128M",
+//                            0};
+//            execv("/usr/bin/stress",argv);
+//        }
+//    }
 }
 
 Program::~Program()
 {
-    if (mLoad) {
-        if (system("pkill -f stress") ==0 )
-            perror("pkill");
-    }
+//    if (mLoad) {
+//        if (system("pkill -f stress") ==0 )
+//            perror("pkill");
+//    }
 }
 
 void Program::finish()

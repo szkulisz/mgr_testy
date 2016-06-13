@@ -15,7 +15,7 @@ class LoggerHelper : public QObject
     Q_OBJECT
 public:
     explicit LoggerHelper(QObject *parent = 0);
-    explicit LoggerHelper(QString, QObject *parent = 0);
+    explicit LoggerHelper(int, QString, QObject *parent = 0);
     ~LoggerHelper();
 
 public slots:
@@ -28,6 +28,10 @@ private:
     QFile mLogFile;
     QString mFileName;
     QTextStream *mLogStream = nullptr;
+    unsigned int mLoops;
+    long long *mLogTable;
+    unsigned int mLogTableIdx=0;
+
 
 };
 
@@ -36,7 +40,7 @@ class Profiler : public QObject
     Q_OBJECT
 public:
     explicit Profiler(QObject *parent = 0);
-    explicit Profiler(int period, bool save, QObject *parent = 0);
+    explicit Profiler(int loops,int period, bool save, QObject *parent = 0);
     ~Profiler();
 
     void startProfiling();
@@ -48,7 +52,7 @@ public:
     void logToFile();
 
     void setPeriod(int period);
-    void startLogging(bool save, const QString &fileName);
+    void startLogging(int loops, bool save, const QString &fileName);
 
 signals:
     void log(long long);
@@ -59,6 +63,7 @@ private:
     timespec mTimePrevious, mTimeActual, mTimerDifference;
     QThread mLoggerThread;
     LoggerHelper *mLogger = nullptr;
+    int mLoops;
 
     timespec countDifference(timespec start, timespec stop);
 

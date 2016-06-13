@@ -24,18 +24,17 @@ Worker::Worker(int loop, bool notificate, int period, bool save,
       mName(name)
 {
 
-
     mQTimer = new QTimer();
     connect(mQTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
     mPosixTimer = new PosixTimer();
     connect(mPosixTimer, SIGNAL(timeout()), this, SLOT(onTimeout()));
 
     mProfiler.setPeriod(mPeriod);
-    mProfiler.startLogging(save, "logs/" + mName + ".txt");
+    mProfiler.startLogging(loop, save, "logs/" + mName + ".txt");
     mProfiler.startProfiling();
 
     if (!whichTimer) {
-        mQTimer->start(mPeriod);
+        mQTimer->start(mPeriod/1000);
     } else {
         mPosixTimer->start(mPeriod);
     }
@@ -53,25 +52,25 @@ void Worker::onTimeout() {
     mProfiler.logToFile();
 
     ++mCounter;
-//    mTest = timer_getoverrun(mPosixTimer->mTimerID);
-//    if (mTest != 0 && mCounter!=1) {
-//        mOverrunCounter++;
-//        if (mTest>mMaxOverrun){
-//            mMaxOverrun = mTest;
-//            mMaxNano = mProfiler.getDifferenceInNanoseconds();
-//            mMaxCounter = mCounter;
-//        }
-//    }
+    mTest = timer_getoverrun(mPosixTimer->mTimerID);
+    if (mTest != 0 && mCounter!=1) {
+        mOverrunCounter++;
+        if (mTest>mMaxOverrun){
+            mMaxOverrun = mTest;
+            mMaxNano = mProfiler.getDifferenceInNanoseconds();
+            mMaxCounter = mCounter;
+        }
+    }
 
     if (mNotificate &&
-            ((mPeriod>=1000) ? true : (mCounter%(1000/mPeriod) == 0)) ){
-        std::cout << mCounter << ' ' << mName.toStdString() << std::endl;
+            ((mPeriod>=1000000) ? true : (mCounter%(1000000/mPeriod) == 0)) ){
+        std::cout << "\r" << mCounter << ' ' << mName.toStdString() << std::flush;
     }
     if (mCounter >= mLoopNumber) {
-//        std::cout << "overrunCounter: " << mOverrunCounter <<std::endl;
-//        std::cout << "maxOverrun: " << mMaxOverrun << std::endl;
-//        std::cout << "mMaxNano: " << mMaxNano << std::endl;
-//        std::cout << "maxCounter: " << mMaxCounter << std::endl;
+        std::cout << "overrunCounter: " << mOverrunCounter <<std::endl;
+        std::cout << "maxOverrun: " << mMaxOverrun << std::endl;
+        std::cout << "mMaxNano: " << mMaxNano << std::endl;
+        std::cout << "maxCounter: " << mMaxCounter << std::endl;
         mQTimer->stop();
         mPosixTimer->stop();
         emit done();

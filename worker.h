@@ -10,7 +10,7 @@ class Worker : public QObject
 {
     Q_OBJECT
 public:
-    explicit Worker(int loopNumber = 200, bool notificate = false, int period = 100,
+    explicit Worker(int loopNumber = 200, bool notificate = false, int period = 1000,
                      bool save = false, int whichTimer = 0, bool highPrio = false, QString name = 0, QObject *parent = 0);
     ~Worker();
     long long getDifferenceInNanoseconds();

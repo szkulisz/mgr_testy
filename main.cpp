@@ -17,10 +17,10 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addVersionOption();
     // -i -> interval
-    QCommandLineOption interval("i", QCoreApplication::translate("main","timer interval"),
-                                QCoreApplication::translate("main","interval=MSEC"));
-    interval.setDefaultValue("1");
-    parser.addOption(interval);
+    QCommandLineOption period("i", QCoreApplication::translate("main","timer interval"),
+                                QCoreApplication::translate("main","interval=USEC"));
+    period.setDefaultValue("1");
+    parser.addOption(period);
     // -n -> umber of loops
     QCommandLineOption length("n", QCoreApplication::translate("main","number of loops"),
                               QCoreApplication::translate("main","loops"));
@@ -32,22 +32,28 @@ int main(int argc, char *argv[])
     timer.setDefaultValue("0");
     parser.addOption(timer);
     // -s -> if save to file
-    QCommandLineOption save("s", QCoreApplication::translate("main","save to file option"));
+    QCommandLineOption save("s", QCoreApplication::translate("main","indicate if save jitter to file"));
     parser.addOption(save);
     // -l -> if load is present
     QCommandLineOption load("l", QCoreApplication::translate("main","indicate if load is present in system"));
     parser.addOption(load);
     // -p -> timer in high priority thread
-    QCommandLineOption priority("p", QCoreApplication::translate("main","timer in high priority thread"));
+    QCommandLineOption priority("p", QCoreApplication::translate("main","indicate if timer is in high priority thread"));
     parser.addOption(priority);
     // -r -> Linux is RT patched
-    QCommandLineOption kernel("r", QCoreApplication::translate("main","Linux is RT patched"));
+    QCommandLineOption kernel("r", QCoreApplication::translate("main","indicate if Linux is RT patched"));
     parser.addOption(kernel);
     parser.process(a);
 
+    if ((parser.value(timer).toInt() == 0) && (parser.value(period).toInt() < 1000)) {
+        std::cout << "QTimer has msec resolution, so minimum value for -i is 1000" << std::endl;
+        std::cout << "Exit" << std::endl;
+        return -1;
+    }
 
-    Program program(parser.value(length).toInt(), parser.value(interval).toInt(), parser.value(timer).toInt(),
-                parser.isSet(priority), parser.isSet(save), parser.isSet(load));
+
+    Program program(parser.value(length).toInt(), parser.value(period).toInt(), parser.value(timer).toInt(),
+                parser.isSet(priority), parser.isSet(save), parser.isSet(load), parser.isSet(kernel));
 
     return a.exec();
 }
