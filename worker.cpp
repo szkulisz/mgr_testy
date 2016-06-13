@@ -49,7 +49,7 @@ Worker::~Worker()
 
 void Worker::onTimeout() {
     mProfiler.updateProfiling();
-    mProfiler.logToFile();
+    mProfiler.saveLogFile();
 
     ++mCounter;
     mTest = timer_getoverrun(mPosixTimer->mTimerID);

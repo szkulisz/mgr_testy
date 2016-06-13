@@ -18,7 +18,6 @@ public:
 
 signals:
     void done();
-    void timeout(long long);
 
 public slots:
     void onTimeout();
@@ -30,7 +29,6 @@ private:
     int mLoopNumber;
     int mCounter;
     int mPeriod;
-    int mWhereToWrite;
     QString mName;
     Profiler mProfiler;
     PosixTimer *mPosixTimer;

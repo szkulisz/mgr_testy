@@ -3,37 +3,12 @@
 
 #include <time.h>
 #include <QFile>
-
+#include <QTextStream>
 #include <QString>
 #include <QObject>
-#include <QThread>
 
 class QTextStream;
 
-class LoggerHelper : public QObject
-{
-    Q_OBJECT
-public:
-    explicit LoggerHelper(QObject *parent = 0);
-    explicit LoggerHelper(int, QString, QObject *parent = 0);
-    ~LoggerHelper();
-
-public slots:
-    void log(long long difference);
-    void atThreadStart();
-
-
-
-private:
-    QFile mLogFile;
-    QString mFileName;
-    QTextStream *mLogStream = nullptr;
-    unsigned int mLoops;
-    long long *mLogTable;
-    unsigned int mLogTableIdx=0;
-
-
-};
 
 class Profiler : public QObject
 {
@@ -61,9 +36,12 @@ private:
     bool mSave;
     int mPeriod;
     timespec mTimePrevious, mTimeActual, mTimerDifference;
-    QThread mLoggerThread;
-    LoggerHelper *mLogger = nullptr;
     int mLoops;
+    long long *mLogTable;
+    unsigned int mLogTableIdx=0;
+    QFile mLogFile;
+    QString mFileName;
+    QTextStream *mLogStream = nullptr;
 
     timespec countDifference(timespec start, timespec stop);
 

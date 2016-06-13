@@ -3,7 +3,8 @@
 
 #include <QObject>
 #include "worker.h"
-#include <QThread>
+#include <QTimer>
+#include "posixtimer.h"
 
 class Program : public QObject
 {
@@ -14,15 +15,27 @@ public:
     ~Program();
 
 signals:
+    void done();
 
 public slots:
     void finish();
+    void onTimeout();
 
 private:
-    Worker *mWorker;
-    QThread mTimerThread;
     pid_t mChildPid;
-    bool mLoad, mSave;
+    QString mName;
+    Profiler mProfiler;
+    PosixTimer *mPosixTimer;
+    QTimer *mQTimer;
+    bool mLoad, mSave, mNotificate, mHighPrio;
+    int mLoopNumber = 0;
+    int mCounter = 0;
+    int mPeriod = 0;
+    int mOverrunCounter = 0;
+    int mMaxOverrun  = 0;
+    int mTest = 0;
+    int mMaxCounter = 0;
+    long long mMaxNano = 0;
 };
 
 #endif // SUPER_H

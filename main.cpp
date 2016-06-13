@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     // -i -> interval
     QCommandLineOption period("i", QCoreApplication::translate("main","timer interval"),
                                 QCoreApplication::translate("main","interval=USEC"));
-    period.setDefaultValue("1");
+    period.setDefaultValue("1000");
     parser.addOption(period);
     // -n -> umber of loops
     QCommandLineOption length("n", QCoreApplication::translate("main","number of loops"),

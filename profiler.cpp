@@ -29,9 +29,8 @@ Profiler::Profiler(int loops, int period, bool save, QObject *parent)
 Profiler::~Profiler()
 {
     if (mSave) {
-        delete mLogger;
-        mLoggerThread.quit();
-        mLoggerThread.wait();
+        delete mLogStream;
+        delete mLogTable;
     }
 
 }
@@ -70,10 +69,12 @@ long long Profiler::getDifferenceInNanoseconds()
     return (1000000000*mTimerDifference.tv_sec + mTimerDifference.tv_nsec) - periodInNs;
 }
 
-void Profiler::logToFile()
+void Profiler::saveLogFile()
 {
     if (mSave) {
-        emit log(getDifferenceInNanoseconds());
+        mLogFile.setFileName(fileName);
+        mLogFile.open(QFile::WriteOnly | QFile::Text);
+        mLogStream = new QTextStream(&mLogFile);
     }
 }
 
@@ -86,12 +87,7 @@ void Profiler::startLogging(int loops, bool save, const QString &fileName)
 {
     mSave = save;
     if (mSave) {
-        mLogger = new LoggerHelper(loops, fileName);
-        mLogger->moveToThread(&mLoggerThread);
-        connect(&mLoggerThread,&QThread::started,mLogger,&LoggerHelper::atThreadStart);
-        connect(this,&Profiler::log,mLogger,&LoggerHelper::log);
-        mLoggerThread.setObjectName("LoggerThread");
-        mLoggerThread.start();
+        mLogTable = new long long[loops];
     }
 }
 
@@ -111,53 +107,3 @@ timespec Profiler::countDifference(timespec start, timespec end)
 }
 
 
-
-LoggerHelper::LoggerHelper(QObject *parent)
-    : QObject(parent)
-{
-}
-
-LoggerHelper::LoggerHelper(int loops, QString fileName, QObject *parent) :
-    QObject(parent),
-    mFileName(fileName),
-    mLoops(loops)
-{
-    mLogTable = new long long[loops];
-    mLogFile.setFileName(mFileName);
-    mLogFile.open(QFile::WriteOnly | QFile::Text);
-    mLogStream = new QTextStream(&mLogFile);
-}
-
-LoggerHelper::~LoggerHelper()
-{
-//    for (auto val : mLogTable)
-    std::cout << "\nzapis do pliku" << std::endl;
-    for(unsigned int i=1; i<mLoops-1; ++i)
-        *mLogStream << mLogTable[i] << "\n";
-    delete mLogStream;
-    if (mLogFile.isOpen())
-        mLogFile.close();
-    std::cout << "koniec zapisu" << std::endl;
-}
-
-void LoggerHelper::log(long long difference)
-{
-//    *mLogStream << difference << "\n";
-    if (mLogTableIdx <= mLoops) {
-        mLogTable[mLogTableIdx++] = difference;
-    } else {
-        std::cout << "Przekroczyles rozmiar tablicy..." << std::endl;
-    }
-}
-
-void LoggerHelper::atThreadStart()
-{
-    int sts;
-    struct sched_param param;
-    sts = sched_getparam(0, &param);
-    CHECK(sts,"sched_getparam");
-    param.sched_priority = sched_get_priority_min(SCHED_OTHER);
-    sts = sched_setscheduler(0, SCHED_OTHER, &param);
-    CHECK(sts,"sched_setscheduler");
-    std::cout << "LoggerThread ma ID: " << QThread::currentThreadId() << " i priorytet: " << param.sched_priority << std::endl;
-}

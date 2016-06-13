@@ -20,7 +20,7 @@ PosixTimer::PosixTimer(int test, QObject *parent) : QObject(parent),mTest(test)
     // Now it's possible to give a pointer to the object
     this->mSignalEvent.sigev_value.sival_ptr = (void*) this;
     // Declare this signal as Alarm Signal
-    this->mSignalEvent.sigev_signo = SIGRTMIN;
+    this->mSignalEvent.sigev_signo = SIGALRM;
 
     // Install the Timer
     if (timer_create(CLOCK_MONOTONIC, &this->mSignalEvent, &this->mTimerID)!= 0) {
@@ -29,7 +29,7 @@ PosixTimer::PosixTimer(int test, QObject *parent) : QObject(parent),mTest(test)
     }
 
     // Finally install tic as signal handler
-    if (sigaction(SIGRTMIN, &this->mSignalAction, NULL)) {
+    if (sigaction(SIGALRM, &this->mSignalAction, NULL)) {
         perror("Could not install new signal handler");
     }
 }

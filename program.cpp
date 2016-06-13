@@ -1,13 +1,12 @@
 #include "program.h"
 #include <QCoreApplication>
 #include <QTextStream>
-#include <QThread>
 #include <pthread.h>
-#include "worker.h"
 #include <unistd.h>
 #include <signal.h>
 #include <iostream>
 #include <sstream>
+#include "assert.h"
 
 #define CHECK(sts,msg)  \
   if (sts == -1) {      \
@@ -18,25 +17,30 @@
 Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool load, bool rtKernel, QObject *parent)
     : QObject(parent),
       mLoad(load),
-      mSave(save)
+      mSave(save),
+      mHighPrio(highPrio),
+      mLoopNumber(loop),
+      mPeriod(period)
 {
 //    save = 1;
 //    mSave = 1;
-//    loop = 1000;
-//    period = 1000;
-//    highPrio = 1;
-//    timer = 0;
+//    mLoopNumber = 10000;
+//    mPeriod = 10000;
+//    mHighPrio = 1;
+//    timer = 1;
 
     int sts;
     struct sched_param param;
     sts = sched_getparam(0, &param);
     CHECK(sts,"sched_getparam");
-    param.sched_priority = 99;//(sched_get_priority_max(SCHED_FIFO));
+    param.sched_priority = (sched_get_priority_max(SCHED_FIFO));
     sts = sched_setscheduler(0, SCHED_FIFO, &param);
     CHECK(sts,"sched_setscheduler");
     std::cout << "proces ma ID: " << QThread::currentThreadId() << " i priorytet: " << param.sched_priority << std::endl;
 
-    QString name = QString::number(period);
+    connect(this, &Program::done, this, &Program::finish);
+
+    QString name = "logs/" + QString::number(period);
     if (rtKernel) {
         name += "_rt_";
     } else {
@@ -58,17 +62,36 @@ Program::Program(int loop, int period, int timer, bool highPrio, bool save, bool
         break;
     case 1:
         name += "pos";
+        break;
+    default:
+        std::cout << "Incorrect -t value" << std::endl;
+        std::cout << "Exit" << std::endl;
+        QCoreApplication::quit();
+        break;
+    }
+    name += ".txt";
+
+    mProfiler.setPeriod(mPeriod);
+    mProfiler.startLogging(loop, save, name);
+    mProfiler.startProfiling();
+
+    mQTimer = new QTimer();
+    connect(mQTimer, &QTimer::timeout, this, &Program::onTimeout);
+    mPosixTimer = new PosixTimer();
+    connect(mPosixTimer, &PosixTimer::timeout, this, &Program::onTimeout);
+    switch (timer) {
+    case 0:
+        mQTimer->start(mPeriod/1000);
+        break;
+    case 1:
+        mPosixTimer->start(mPeriod);
+        break;
+    case 2:
+        break;
     default:
         break;
     }
 
-    mWorker = new Worker(loop,true,period,save,timer,highPrio,name);
-    connect(mWorker,&Worker::done,this,&Program::finish);
-    mWorker->moveToThread(&mTimerThread);
-    mTimerThread.setObjectName("TimerThread");
-    connect(&mTimerThread,&QThread::started,mWorker,&Worker::atThreadStart);
-    connect(&mTimerThread,&QThread::finished,mWorker,&QObject::deleteLater);
-    mTimerThread.start();
 
 //    if (mLoad) {
 //        mChildPid = fork();
@@ -89,12 +112,42 @@ Program::~Program()
 //        if (system("pkill -f stress") ==0 )
 //            perror("pkill");
 //    }
+    delete mPosixTimer;
+    delete mQTimer;
 }
 
 void Program::finish()
 {
-    mTimerThread.quit();
-    mTimerThread.wait();
     QCoreApplication::quit();
+}
+
+void Program::onTimeout()
+{
+    mProfiler.updateProfiling();
+    mProfiler.saveLogFile();
+
+    ++mCounter;
+    mTest = timer_getoverrun(mPosixTimer->mTimerID);
+    if (mTest != 0 && mCounter!=1) {
+        mOverrunCounter++;
+        if (mTest>mMaxOverrun){
+            mMaxOverrun = mTest;
+            mMaxNano = mProfiler.getDifferenceInNanoseconds();
+            mMaxCounter = mCounter;
+        }
+    }
+
+    if ((mPeriod>=1000000) ? true : (mCounter%(1000000/mPeriod) == 0)) {
+        std::cout << "\r" << mCounter << ' ' << mName.toStdString() << std::flush;
+    }
+    if (mCounter >= mLoopNumber) {
+        std::cout << "overrunCounter: " << mOverrunCounter <<std::endl;
+        std::cout << "maxOverrun: " << mMaxOverrun << std::endl;
+        std::cout << "mMaxNano: " << mMaxNano << std::endl;
+        std::cout << "maxCounter: " << mMaxCounter << std::endl;
+        mQTimer->stop();
+        mPosixTimer->stop();
+        emit done();
+    }
 }
 
