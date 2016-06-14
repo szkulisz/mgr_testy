@@ -73,7 +73,7 @@ Program::Program(int loop, int period, int timer, bool save, bool load, bool rtK
         mName += "pos";
         break;
     default:
-        std::cout << "Incorrect -t value" << std::endl;
+        std::cout << "Incorrect -t value " << timer << std::endl;
         std::cout << "Exit" << std::endl;
         QCoreApplication::quit();
         break;
@@ -104,8 +104,12 @@ Program::Program(int loop, int period, int timer, bool save, bool load, bool rtK
 Program::~Program()
 {
     if (mLoad) {
-        if (system("pkill -f stress") ==0 )
+        if (system("pkill -f stress") == -1 ) {
             perror("pkill");
+            if (system("pkill -f -9 stress") == -1 ) {
+                perror("pkill -9");
+            }
+        }
     }
 }
 
